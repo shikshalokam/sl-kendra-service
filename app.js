@@ -2,7 +2,8 @@ require("dotenv").config();
 //config and routes
 global.config = require("./config");
 require("./config/globals")();
-require("./generics/scheduler")
+require("./generics/scheduler");
+require("./logger")();
 
 let router = require("./routes");
 
@@ -66,29 +67,6 @@ app.get(serviceBaseUrl + "web2/*", function (req, res) {
   res.sendFile(path.join(__dirname, "/public" + serviceBaseUrl + "web2/index.html"));
 });
 
-var bunyan = require("bunyan");
-global.loggerObj = bunyan.createLogger({
-  name: "foo",
-  streams: [
-    {
-      type: "rotating-file",
-      path: path.join(__dirname + "/logs/" + process.pid + "-all.log"),
-      period: "1d", // daily rotation
-      count: 3 // keep 3 back copies
-    }
-  ]
-});
-global.loggerExceptionObj = bunyan.createLogger({
-  name: "exceptionLogs",
-  streams: [
-    {
-      type: "rotating-file",
-      path: path.join(__dirname + "/logs/" + process.pid + "-exception.log"),
-      period: "1d", // daily rotation
-      count: 3 // keep 3 back copies
-    }
-  ]
-});
 
 // i18next implementation
 var i18next = require("i18next");
@@ -115,29 +93,16 @@ app.use(
 // End of i18Next
 
 app.all("*", (req, res, next) => {
-  if (ENABLE_BUNYAN_LOGGING === "ON") {
-    loggerObj.info({
-      method: req.method,
-      url: req.url,
-      headers: req.headers,
-      body: req.body
-    });
-  }
+  // if (ENABLE_BUNYAN_LOGGING === "ON") {
 
-  if (ENABLE_CONSOLE_LOGGING === "ON") {
-    console.log("-------Request log starts here------------------");
-    console.log(
-      "%s %s on %s from ",
-      req.method,
-      req.url,
-      new Date(),
-      req.headers["user-agent"]
-    );
-    console.log("Request Headers: ", req.headers);
-    console.log("Request Body: ", req.body);
-    console.log("Request Files: ", req.files);
-    console.log("-------Request log ends here------------------");
-  }
+
+  debugLogger.info("Requests:", {
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    body: req.body
+  })
+
   next();
 });
 
@@ -147,11 +112,11 @@ router(app);
 //listen to given port
 app.listen(config.port, () => {
 
-  console.log(
-    "Environment: " +
-    (process.env.NODE_ENV ? process.env.NODE_ENV : "development")
-  );
+  debugLogger.info("Environment: " +
+    (process.env.NODE_ENV ? process.env.NODE_ENV : "development"));
 
-  console.log("Application is running on the port:" + config.port);
+  debugLogger.info("Application is running on the port:" + config.port);
 
 });
+
+module.exports = app;

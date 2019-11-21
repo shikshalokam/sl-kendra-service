@@ -6,14 +6,14 @@
  */
 
 let samikshaService = require(ROOT_PATH + "/generics/helpers/samiksha");
-let notificationHelpers = require(ROOT_PATH + "/module/notifications/helper");
+let notificationHelpers = require(ROOT_PATH + "/module/notifications/in-app/helper");
 
 
 let pendingAssessments = function () {
 
     nodeScheduler.scheduleJob(process.env.SCHEDULE_FOR_PENDING_ASSESSMENT, () => {
 
-        console.log("<---- Pending Assessment cron started  ---->", new Date());
+        debugLogger.info("<---- Pending Assessment cron started  --->", new Date());
 
         return new Promise(async (resolve, reject) => {
             let pendingAssessments = await samikshaService.pendingAssessments()
@@ -23,7 +23,7 @@ let pendingAssessments = function () {
                 await notificationHelpers.pendingAssessmentsOrObservations(pendingAssessments.result)
             }
 
-            console.log("<---  Pending Assessment cron ended  ---->", new Date());
+            debugLogger.info("<----  Pending Assessment cron ended  --->", new Date());
             resolve()
 
         })

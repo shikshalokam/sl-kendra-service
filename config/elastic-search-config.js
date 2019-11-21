@@ -1,5 +1,5 @@
 //dependencies
-const { Client } = require('@elastic/elasticsearch')
+const { Client } = require('@elastic/elasticsearch');
 let slackClient = require("../generics/helpers/slack-communications");
 
 var connect = function (config) {
@@ -14,17 +14,20 @@ var connect = function (config) {
   elasticSearchClient.ping({
   }, function (error) {
     if (error) {
-      console.log(error)
+      debugLogger.error(error);
 
       let errorData = {
+        slackErrorName: "sl-kendra-service",
+        color: "#ed2f21",
         host: config.host,
         message: 'Elasticsearch cluster is down!'
       }
 
-      slackClient.elasticSearchErrorAlert(errorData)
-      console.error('Elasticsearch cluster is down!');
+      slackClient.sendErrorMessageToSlack(errorData);
+      // slackClient.elasticSearchErrorAlert(errorData);
+      debugLogger.error('Elasticsearch cluster is down!');
     } else {
-      console.log('Elasticsearch connection established.');
+      debugLogger.info('Elasticsearch connection established.');
     }
   });
 

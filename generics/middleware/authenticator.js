@@ -29,9 +29,19 @@ var respUtil = function (resp) {
 
 var tokenAuthenticationFailureMessageToSlack = function (req, token, msg) {
   let jwtInfomration = jwtDecode(token)
-  jwtInfomration["x-authenticated-user-token"] = token
-  const tokenByPassAllowedLog = { method: req.method, url: req.url, headers: req.headers, body: req.body, errorMsg: msg, customFields: jwtInfomration }
-  slackClient.sendExceptionLogMessage(tokenByPassAllowedLog)
+  jwtInfomration["x-authenticated-user-token"] = token;
+
+  const tokenByPassAllowedLog = {
+    method: req.method,
+    url: req.url,
+    headers: req.headers,
+    body: req.body,
+    errorMsg: msg,
+    customFields: jwtInfomration,
+    slackErrorName: "sl-kendra-service",
+    color: "#ed2f21"
+  }
+  slackClient.sendErrorMessageToSlack(tokenByPassAllowedLog)
 }
 
 var apiInterceptor = new ApiInterceptor(keyCloakConfig, cacheConfig);
@@ -68,6 +78,11 @@ module.exports = async function (req, res, next) {
   var token = req.headers["x-authenticated-user-token"];
   if (!req.rspObj) req.rspObj = {};
   var rspObj = req.rspObj;
+
+  if (req.path.includes("slack")) {
+    next();
+    return
+  }
 
   if (!token) {
     rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;

@@ -9,7 +9,7 @@ let FileStream = class FileStream {
   constructor(fileName) {
     const currentDate = new Date();
     const fileExtensionWithTime = moment(currentDate).tz("Asia/Kolkata").format("YYYY_MM_DD_HH_mm") + ".csv";
-    if(!process.env.CSV_REPORTS_PATH){
+    if (!process.env.CSV_REPORTS_PATH) {
       process.env.CSV_REPORTS_PATH = DEFAULT_REPORTS_PATH
     }
     const filePath = `${process.env.CSV_REPORTS_PATH}/${moment(currentDate).tz("Asia/Kolkata").format("YYYY_MM_DD")}/`;
@@ -44,7 +44,7 @@ let FileStream = class FileStream {
     try {
       fs.mkdirSync(filePath, { recursive: true })
     } catch (err) {
-      console.log(err)
+      debugLogger.error(err);
       if (err.code !== 'EEXIST') throw err
     }
   }

@@ -6,12 +6,12 @@
  */
 
 let samikshaService = require(ROOT_PATH + "/generics/helpers/samiksha");
-let notificationHelpers = require(ROOT_PATH + "/module/notifications/helper");
+let notificationHelpers = require(ROOT_PATH + "/module/notifications/in-app/helper");
 
 let completedObservation = function () {
   nodeScheduler.scheduleJob(process.env.SCHEDULE_FOR_COMPLETED_OBSERVATION, () => {
 
-    console.log("<---- Completed Observations cron started ---->", new Date());
+    debugLogger.info("<---- Completed Observations cron started ---->", new Date());
 
     return new Promise(async (resolve, reject) => {
       let completedObservations = await samikshaService.completedObservations()
@@ -21,7 +21,7 @@ let completedObservation = function () {
         await notificationHelpers.completedAssessmentsOrObservations(completedObservations.result, true)
       }
 
-      console.log("<---- Completed Observations cron stopped --->", new Date());
+      debugLogger.info("<---- Completed Observations cron stopped --->", new Date());
       resolve()
 
     })

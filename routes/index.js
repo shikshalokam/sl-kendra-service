@@ -10,7 +10,10 @@ module.exports = function (app) {
 
   const applicationBaseUrl = process.env.APPLICATION_BASE_URL || "/kendra/"
 
-  app.use(applicationBaseUrl, authenticator);
+  if (process.env.NODE_ENV !== "testing") {
+    app.use(applicationBaseUrl, authenticator);
+  }
+
   app.use(applicationBaseUrl, pagination);
   app.use(applicationBaseUrl, setLanguage);
 
@@ -19,12 +22,11 @@ module.exports = function (app) {
     if (req.translationLanguage) {
       req.i18n.changeLanguage(listOfLanguages[req.translationLanguage]);
     }
-    //req.params.controller = (req.params.controller).toLowerCase();
-    // req.params.controller += "Controller";
+
     if (!req.params.version) next();
     else if (!controllers[req.params.version]) next();
     else if (!controllers[req.params.version][req.params.controller]) next();
-    else if (!controllers[req.params.version][req.params.controller][req.params.method]) next();
+    else if (!(controllers[req.params.version][req.params.controller][req.params.method] || controllers[req.params.version][req.params.controller][req.params.file][req.params.method])) next();
     else if (req.params.method.startsWith("_")) next();
     else {
 
@@ -35,7 +37,14 @@ module.exports = function (app) {
         if (validationError.length)
           throw { status: 400, message: validationError }
 
-        var result = await controllers[req.params.version][req.params.controller][req.params.method](req);
+        let result
+
+        if (req.params.file) {
+          result = await controllers[req.params.version][req.params.controller][req.params.file][req.params.method](req);
+        } else {
+          result = await controllers[req.params.version][req.params.controller][req.params.method](req);
+        }
+
 
         if (result.isResponseAStream == true) {
           // Check if file specified by the filePath exists 
@@ -72,14 +81,8 @@ module.exports = function (app) {
             failed: result.failed
           });
         }
-        if (ENABLE_BUNYAN_LOGGING === "ON") {
-          loggerObj.info({ resp: result });
-        }
-        if (ENABLE_CONSOLE_LOGGING === "ON") {
-          console.log('-------------------Response log starts here-------------------');
-          console.log(result);
-          console.log('-------------------Response log ends here-------------------');
-        }
+
+        debugLogger.info("Response:", result);
       }
       catch (error) {
         res.status(error.status ? error.status : 400).json({
@@ -100,26 +103,36 @@ module.exports = function (app) {
         }
 
         const toLogObject = {
+          slackErrorName: "sl-kendra-service",
+          color: "#ed2f21",
           method: req.method,
-          url: req.url, headers: req.headers,
-          body: req.body,
-          errorMsg: error.errorObject ? error.errorObject.message : null,
-          errorStack: error.errorObject ? error.errorObject.stack : null,
-          customFields: customFields
+          url: req.url,
+          body: req.body && !_.isEmpty(req.body) ? req.body : "not provided",
+          errorMsg: "not provided",
+          errorStack: "not provided"
         }
-        slackClient.sendExceptionLogMessage(toLogObject)
-        loggerExceptionObj.info(toLogObject);
-        loggerObj.info({ resp: error });
-        console.log('-------------------Response log starts here-------------------');
-        console.log(error);
-        console.log('-------------------Response log ends here-------------------');
+
+        if (error.message) {
+          toLogObject["errorMsg"] = JSON.stringify(error.message);
+        } else if (error.errorObject) {
+          toLogObject["errorMsg"] = error.errorObject.message;
+          toLogObject["errorStack"] = error.errorObject.stack;
+        }
+
+        slackClient.sendErrorMessageToSlack(_.merge(toLogObject, customFields));
+
+        debugLogger.error("Error Response:", error);
       };
     }
   };
 
   app.all(applicationBaseUrl + "api/:version/:controller/:method", inputValidator, router);
 
+  app.all(applicationBaseUrl + "api/:version/:controller/:file/:method", inputValidator, router);
+
   app.all(applicationBaseUrl + "api/:version/:controller/:method/:_id", inputValidator, router);
+  app.all(applicationBaseUrl + "api/:version/:controller/:file/:method/:_id", inputValidator, router);
+
 
   app.use((req, res, next) => {
     res.status(404).send("Not found!");

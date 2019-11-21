@@ -4,15 +4,18 @@ let moment = require("moment-timezone")
 let currentDate = moment(new Date());
 let slackClient = require(ROOT_PATH + "/generics/helpers/slack-communications");
 const userExtensionHelper = require(ROOT_PATH + "/module/user-extension/helper");
-const pushNotificationsHelper = require(ROOT_PATH + "/module/push-notifications/helper");
+const pushNotificationsHelper = require(ROOT_PATH + "/module/notifications/push/helper");
+// const fcmHelper = require(ROOT_PATH + "/module/notifications/fcm/helper");
 
-module.exports = class notificationsHelper {
+module.exports = class inAppNotificationsHelper {
 
-    static list(userDetails, pageSize, pageNo, appName = "") {
+    static list(userDetails, pageSize, pageNo, appName = "", headers = "") {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let getNotificationDocument = await elasticSearchHelper.getNotificationData(userDetails, appName)
+                await elasticSearchHelper.pushAppVersionToLoggedInUser(userDetails, headers, appName);
+
+                let getNotificationDocument = await elasticSearchHelper.getNotificationData(userDetails, appName);
 
                 if (getNotificationDocument.statusCode !== 200) {
                     return resolve({
@@ -39,7 +42,7 @@ module.exports = class notificationsHelper {
         })
     }
 
-    static markItRead(userDetails, notificatonNumber, appName = "") {
+    static markAsRead(userDetails, notificatonNumber, appName = "") {
         return new Promise(async (resolve, reject) => {
             try {
 
@@ -52,21 +55,35 @@ module.exports = class notificationsHelper {
         })
     }
 
-    static unReadCount(userDetails, appName = "") {
+    static unReadCount(userDetails, appName = "", headers) {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let getNotificationDocument = await elasticSearchHelper.getNotificationData(userDetails, appName)
-
-                if (getNotificationDocument.statusCode !== 200) {
-                    return resolve({
-                        count: 0
-                    })
+                let response = {
+                    count: 0,
+                    data: []
                 }
 
-                return resolve({
-                    count: getNotificationDocument.body._source.notificationUnreadCount,
-                })
+                if (headers.platform && headers.appname) {
+                    await elasticSearchHelper.pushAppVersionToLoggedInUser(userDetails, headers, appName);
+
+                    let getNotificationDocument = await elasticSearchHelper.getNotificationData(userDetails, appName);
+
+                    if (getNotificationDocument.statusCode === 200) {
+
+                        response["count"] = getNotificationDocument.body._source.notificationUnreadCount;
+
+                        let data = getNotificationDocument.body._source.notifications.filter(item => item.payload.type === "appUpdate" && item.is_read === false && item.payload.platform === headers.platform)
+
+                        if (data.length > 0) {
+                            response["data"] = data
+                        }
+
+                    }
+                }
+
+                return resolve(response)
+
             } catch (error) {
                 return reject(error);
             }
@@ -142,15 +159,17 @@ module.exports = class notificationsHelper {
                             result.payload["program_id"] = pendingData[pointerToPendingData].programId;
                         }
 
-                        let pushAssessmentsOrObservationsToKafka = await kafkaCommunication.pushAssessmentsOrObservationsNotification(result);
+                        let pushAssessmentsOrObservationsToKafka = await kafkaCommunication.pushNotificationsDataToKafka(result);
 
                         if (pushAssessmentsOrObservationsToKafka && pushAssessmentsOrObservationsToKafka.status && pushAssessmentsOrObservationsToKafka.status != "success") {
                             let errorObject = {
                                 userId: result.user_id,
                                 message: `Failed to push ${result.title} to kafka`,
-                                payload: result.payload
+                                payload: result.payload,
+                                slackErrorName: "sl-kendra-service",
+                                color: "#ed2f21",
                             }
-                            slackClient.kafkaErrorAlert(errorObject)
+                            slackClient.sendErrorMessageToSlack(errorObject)
                             return;
                         }
                     }
@@ -209,14 +228,17 @@ module.exports = class notificationsHelper {
 
                         result.user_id = allUserCompletionData[pointerToUserData]
                         result.text = observation ? `You have Completed ${userCompletionData[allUserCompletionData[pointerToUserData]].count} Observations this month!` : `You have Completed ${userCompletionData[allUserCompletionData[pointerToUserData]].count} Assessments this month!`
-                        let pushCompletedAssessmentsOrObservationsToKafka = await kafkaCommunication.pushAssessmentsOrObservationsNotification(result);
+                        let pushCompletedAssessmentsOrObservationsToKafka = await kafkaCommunication.pushNotificationsDataToKafka(result);
 
                         if (pushCompletedAssessmentsOrObservationsToKafka.status && pushCompletedAssessmentsOrObservationsToKafka.status != "success") {
                             let errorObject = {
+                                slackErrorName: "sl-kendra-service",
+                                color: "#ed2f21",
                                 message: observations ? `Failed to push completed observations to kafka` : `Failed to push completed assessments to kafka`,
                                 payload: result.payload
                             }
-                            slackClient.kafkaErrorAlert(errorObject)
+
+                            slackClient.sendErrorMessageToSlack(errorObject)
                             return;
                         }
                     }
@@ -261,7 +283,7 @@ module.exports = class notificationsHelper {
                     throw "No devices found"
                 }
 
-                let getSpecificAppData = getAllDevices.devices.filter(eachDeviceName => eachDeviceName.app === notificationMessage.appName)
+                let getSpecificAppData = getAllDevices.devices.filter(eachDeviceName => eachDeviceName.app === notificationMessage.appName && eachDeviceName.status === "active")
 
                 for (let pointerToDevices = 0; pointerToDevices < getSpecificAppData.length; pointerToDevices++) {
 
@@ -292,6 +314,41 @@ module.exports = class notificationsHelper {
 
                         // slackClient.pushNotificationError(errorMsg);
                     }
+                }
+
+                return resolve()
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
+
+    static updateAppVersion(updateAppData) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+
+                for (let pointerToUpdateAppData = 0; pointerToUpdateAppData < updateAppData.length; pointerToUpdateAppData++) {
+
+                    let result = {}
+
+                    result["is_read"] = false;
+                    result["internal"] = true;
+                    result["action"] = "versionUpdate";
+                    result["appName"] = updateAppData[pointerToUpdateAppData].appName;
+                    result["created_at"] = new Date();
+                    result["text"] = updateAppData[pointerToUpdateAppData].text;
+                    result["title"] = updateAppData[pointerToUpdateAppData].title;
+                    result["type"] = "Information";
+                    result["payload"] = {};
+                    result["payload"]["appVersion"] = updateAppData[pointerToUpdateAppData].version;
+                    result["payload"]["updateType"] = updateAppData[pointerToUpdateAppData].status;
+                    result["payload"]["type"] = "appUpdate";
+                    result["payload"]["platform"] = updateAppData[pointerToUpdateAppData].platform;
+
+                    // await elasticSearchHelper.updateAppVersion(result);
+                    await kafkaCommunication.pushNotificationsDataToKafka(result);
                 }
 
                 return resolve()

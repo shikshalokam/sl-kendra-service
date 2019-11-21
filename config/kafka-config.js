@@ -1,5 +1,5 @@
 //dependencies
-const kafka = require('kafka-node')
+const kafka = require('kafka-node');
 
 var connect = function (config) {
 
@@ -10,42 +10,23 @@ var connect = function (config) {
   })
 
   client.on('error', function (error) {
-    console.error.bind(console, "kafka connection error!")
+    debugLogger.error("kafka connection error!");
   });
 
   producer = new Producer(client)
 
   producer.on('ready', function () {
-    console.log("Connected to Kafka");
+    debugLogger.info('Connected to Kafka');
   });
 
   producer.on('error', function (err) {
-    console.error.bind(console, "kafka producer creation error!")
+    debugLogger.error("kafka producer creation error!");
   })
 
-  Consumer = kafka.Consumer
-
-  if (config.topics["notificationsTopic"] && config.topics["notificationsTopic"] != "") {
-
-    let consumer = new Consumer(
-      client,
-      [
-        { topic: config.topics["notificationsTopic"], offset: 0, partition: 0 }
-      ],
-      {
-        autoCommit: true
-      }
-    );
-
-    consumer.on('message', async function (message) {
-      notificationsConsumer.messageReceived(message)
-    });
-
-    consumer.on('error', async function (error) {
-      notificationsConsumer.errorTriggered(error)
-    });
-
-  }
+  // Consumer = kafka.Consumer;
+  sendToKafkaConsumers(config.topics["notificationsTopic"], true);
+  sendToKafkaConsumers(config.topics["languagesTopic"], true);
+  sendToKafkaConsumers(config.topics["emailTopic"], false);
 
   return {
     kafkaProducer: producer,
@@ -54,6 +35,48 @@ var connect = function (config) {
     kafkaKeyedMessage: KeyedMessage
   };
 
+};
+
+var sendToKafkaConsumers = function (topic, commit = false) {
+
+  let Consumer = kafka.Consumer;
+
+  if (topic && topic != "") {
+
+    let consumer = new Consumer(
+      client,
+      [
+        { topic: topic, offset: 0, partition: 0 }
+      ],
+      {
+        autoCommit: commit
+      }
+    );
+
+    consumer.on('message', async function (message) {
+
+      if (topic === process.env.LANGUAGE_TOPIC) {
+        languagesConsumer.messageReceived(message)
+      } else if (topic === process.env.EMAIL_TOPIC) {
+        emailConsumer.messageReceived(message, consumer)
+      } else {
+        notificationsConsumer.messageReceived(message)
+      }
+    });
+
+    consumer.on('error', async function (error) {
+
+      if (topic === process.env.LANGUAGE_TOPIC) {
+        languagesConsumer.errorTriggered(error);
+      } else if (topic === process.env.EMAIL_TOPIC) {
+        emailConsumer.errorTriggered(message, consumer)
+      }
+      else {
+        notificationsConsumer.errorTriggered(error);
+      }
+    });
+
+  }
 };
 
 module.exports = connect;

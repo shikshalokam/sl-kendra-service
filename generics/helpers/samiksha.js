@@ -10,21 +10,22 @@ let slackClient = require(ROOT_PATH + "/generics/helpers/slack-communications");
 
 var pendingAssessments = function () {
 
-    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_BASE_URL + "api/v1/entityAssessors/pendingAssessments"
+    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_SERVICE_BASE_URL + "api/v1/entityAssessors/pendingAssessments"
 
     return new Promise((resolve, reject) => {
         try {
-            console.log(samikshaServiceUrl)
 
             const samikshaCallBack = function (err, response) {
                 if (err) {
 
                     let errorObject = {
+                        slackErrorName: "sl-kendra-service",
+                        color: "#ed2f21",
                         message: `Samiksha service is down for address ${err.address}`
                     }
 
-                    slackClient.samikshaErrorAlert(errorObject)
-                    console.log("Failed to connect to samiksha service.")
+                    slackClient.sendErrorMessageToSlack(errorObject);
+                    debugLogger.error("Failed to connect to samiksha service.");
                 } else {
                     let pendingAssessments = JSON.parse(response.body);
                     return resolve(pendingAssessments)
@@ -45,18 +46,20 @@ var pendingAssessments = function () {
 
 var pendingObservations = function () {
 
-    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_BASE_URL + "api/v1/observations/pendingObservations"
+    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_SERVICE_BASE_URL + "api/v1/observations/pendingObservations"
 
     return new Promise((resolve, reject) => {
         try {
             const samikshaCallBack = function (err, response) {
                 if (err) {
                     let errorObject = {
+                        slackErrorName: "sl-kendra-service",
+                        color: "#ed2f21",
                         message: `Samiksha service is down for address ${err.address}`
                     }
 
-                    slackClient.samikshaErrorAlert(errorObject)
-                    console.log("Failed to connect to samiksha service.")
+                    slackClient.sendErrorMessageToSlack(errorObject);
+                    debugLogger.error("Failed to connect to samiksha service.");
                 } else {
                     let pendingObservations = JSON.parse(response.body);
                     return resolve(pendingObservations)
@@ -78,18 +81,20 @@ var pendingObservations = function () {
 
 var completedAssessments = function () {
 
-    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_BASE_URL + "api/v1/entityAssessors/completedAssessments"
+    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_SERVICE_BASE_URL + "api/v1/entityAssessors/completedAssessments"
 
     return new Promise((resolve, reject) => {
         try {
             const samikshaCallBack = function (err, response) {
                 if (err) {
                     let errorObject = {
+                        slackErrorName: "sl-kendra-service",
+                        color: "#ed2f21",
                         message: `Samiksha service is down for address ${err.address}`
                     }
 
-                    slackClient.samikshaErrorAlert(errorObject)
-                    console.log("Failed to connect to samiksha service.")
+                    slackClient.sendErrorMessageToSlack(errorObject)
+                    debugLogger.error("Failed to connect to samiksha service.");
 
                 } else {
                     let completedAssessments = JSON.parse(response.body);
@@ -112,7 +117,7 @@ var completedAssessments = function () {
 
 var completedObservations = function () {
 
-    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_BASE_URL + "api/v1/observations/completedObservations"
+    const samikshaServiceUrl = process.env.APPLICATION_BASE_HOST + process.env.SAMIKSHA_SERVICE_BASE_URL + "api/v1/observations/completedObservations"
 
     return new Promise((resolve, reject) => {
         try {
@@ -120,11 +125,13 @@ var completedObservations = function () {
                 if (err) {
 
                     let errorObject = {
+                        slackErrorName: "sl-kendra-service",
+                        color: "#ed2f21",
                         message: `Samiksha service is down for address ${err.address}`
                     }
 
-                    slackClient.samikshaErrorAlert(errorObject)
-                    console.log("Failed to connect to samiksha service.")
+                    slackClient.sendErrorMessageToSlack(errorObject);
+                    debugLogger.error("Failed to connect to samiksha service.");
 
                 } else {
                     let completedObservations = JSON.parse(response.body);

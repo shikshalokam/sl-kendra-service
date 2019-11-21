@@ -12,14 +12,14 @@ var DB = function (config) {
   mongoose.set('useCreateIndex', true)
   mongoose.set('useFindAndModify', false)
   mongoose.set('useUnifiedTopology', true)
-  
+
   var db = mongoose.createConnection(
     config.host + "/" + config.database,
     config.options
   );
   db.on("error", console.error.bind(console, "connection error:"));
   db.once("open", function () {
-    console.log("Connected to DB");
+    debugLogger.info("Connected to DB");
   });
 
   var createModel = function (opts) {
@@ -43,16 +43,13 @@ var DB = function (config) {
         opts.options.expireAfterSeconds ||
         opts.options.expireAfterSeconds === 0
       ) {
-        console.log("Expire Configured for " + opts.name);
+        debugLogger.info("Expire Configured for " + opts.name);
+
         schema.plugin(mongoose_ttl, {
           ttl: opts.options.expireAfterSeconds * 1000
         });
       }
     }
-
-    //static
-    //if(opts.static)
-    //schema.statics[opts.static.methodName] = opts.static.method;
 
     var model = db.model(opts.name, schema, opts.name);
     return model;
