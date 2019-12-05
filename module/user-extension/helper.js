@@ -32,7 +32,7 @@ module.exports = class userExtensionHelper {
 
                 if (userExtensionData) {
 
-                    let deviceNotFound = false
+                    let deviceNotFound = false;
 
                     if (userExtensionData.devices && userExtensionData.devices.length > 0) {
 
@@ -40,11 +40,11 @@ module.exports = class userExtensionHelper {
 
                         if (!matchingDeviceData) {
 
-                            deviceNotFound = true
+                            deviceNotFound = true;
                         }
 
                     } else {
-                        deviceNotFound = true
+                        deviceNotFound = true;
                     }
 
                     if (deviceNotFound) {
@@ -97,27 +97,35 @@ module.exports = class userExtensionHelper {
 
         return new Promise(async (resolve, reject) => {
 
-            deviceArray.forEach(async devices => {
+            try {
+                deviceArray.forEach(async devices => {
 
-                delete devices['message'];
-                delete devices['title'];
+                    delete devices['message'];
+                    delete devices['title'];
 
-                if (devices.deviceId == deviceData.deviceId) {
-                    devices.status = "inactive"
-                    devices.deactivatedAt = new Date();
-                }
+                    if (devices.deviceId == deviceData.deviceId) {
+                        devices.status = "inactive"
+                        devices.deactivatedAt = new Date();
+                    }
+                });
 
-                let statusUpdate = await database.models.userExtension.findOneAndUpdate(
+                let updateDevice = await database.models.userExtension.findOneAndUpdate(
                     { userId: userId },
                     { $set: { "devices": deviceArray } }
-                );
+                ).lean();
+
+                if (!updateDevice) {
+                    throw "Could not update device."
+                }
 
                 return resolve({
                     success: true,
                     message: "successfuly updated the status to inactive"
                 });
 
-            });
+            } catch (error) {
+                return reject(error)
+            }
 
         })
     }

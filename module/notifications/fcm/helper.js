@@ -1,11 +1,6 @@
-let fcmNotification = require('fcm-notification'); // load firebase notification
-const FCM_KEY_PATH = (process.env.FCM_KEY_PATH && process.env.FCM_KEY_PATH != "") ? process.env.FCM_KEY_PATH : "/config/fcm-keystore.json"
-const fcm_token_path = require(ROOT_PATH + FCM_KEY_PATH); //read firebase token from the file
-let FCM = new fcmNotification(fcm_token_path);
 let samikshaThemeColor = process.env.SAMIKSHA_THEME_COLOR ? process.env.SAMIKSHA_THEME_COLOR : "#A63936"
-const nodeEnvironment = process.env.NODE_ENV ? process.env.NODE_ENV : "development";
-let slackClient = require(ROOT_PATH + "/generics/helpers/slack-communications");
 const userExtensionHelper = require(ROOT_PATH + "/module/user-extension/helper");
+const firebaseHelpers = require(ROOT_PATH + "/generics/helpers/fcm");
 
 module.exports = class pushNotificationsHelper {
 
@@ -21,7 +16,7 @@ module.exports = class pushNotificationsHelper {
                     }
                 }
 
-                let pushToTopicData = await this.sendMessage(pushNotificationRelatedInformation)
+                let pushToTopicData = await firebaseHelpers.sendToTopic(pushNotificationRelatedInformation.topic, pushNotificationRelatedInformation.notification)
 
                 return resolve(pushToTopicData)
 
@@ -52,7 +47,7 @@ module.exports = class pushNotificationsHelper {
                     token: notificationData.deviceId
                 }
 
-                let pushToDevice = await this.sendMessage(pushNotificationRelatedInformation);
+                let pushToDevice = await firebaseHelpers.sendToDevice(notificationData.deviceId, pushNotificationRelatedInformation.android);
 
                 return resolve(pushToDevice)
 
@@ -88,145 +83,6 @@ module.exports = class pushNotificationsHelper {
                 return reject(error);
             }
         })
-    }
-
-    static pushToDeviceId(notificationData) {
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                var token = notificationData.deviceId;
-
-                let pushNotificationRelatedInformation = {
-                    token: token,
-                    notification: {
-                        title: notificationData,
-                        body: notificationData.message
-                    }
-                }
-
-                let pushToFcmToken = await this.sendMessage(pushNotificationRelatedInformation)
-
-                return resolve(pushToFcmToken);
-
-            } catch (error) {
-                return reject(error)
-            }
-        })
-    }
-
-    static sendMessage(notificationInformation) {
-
-        return new Promise(async (resolve, reject) => {
-            try {
-
-                let deviceId = notificationInformation.token;
-
-                FCM.send(notificationInformation, (err, response) => {
-
-                    let success;
-                    let message = "";
-                    if (err) {
-                        if (err.errorInfo && err.errorInfo.message) {
-                            if (err.errorInfo.message == "The registration token is not a valid FCM registration token") {
-
-                                slackClient.pushNotificationError({
-                                    "code": err.errorInfo.code,
-                                    "message": err.errorInfo.message,
-                                })
-
-                                message = err.errorInfo.message;
-                            }
-                        }
-
-                        success = false;
-
-                    } else {
-                        success = true
-                    }
-
-                    return resolve({
-                        success: success,
-                        message: message
-                    })
-                });
-
-            } catch (error) {
-                return reject(error)
-            }
-        })
-
-    }
-
-    static subscribeToTopic(subscribeData) {
-
-        return new Promise(async (resolve, reject) => {
-
-            try {
-
-                let success;
-
-                FCM.subscribeToTopic(subscribeData.deviceId, nodeEnvironment + "-" + subscribeData.topic, function (err, response) {
-                    if (err) {
-                        success = false;
-                        slackClient.pushNotificationError({
-                            "code": err.errorInfo.code,
-                            "message": err.errorInfo.message
-                        })
-
-                    } else {
-                        success = true;
-                    }
-
-                    return resolve({
-                        success: success
-                    })
-                })
-
-
-
-            } catch (error) {
-                return reject(error)
-            }
-
-
-        })
-
-    }
-
-    static unsubscribeFromTopic(unsubscribeData) {
-
-        return new Promise(async (resolve, reject) => {
-
-            try {
-
-                let success;
-
-                FCM.unsubscribeFromTopic(unsubscribeData.deviceId, nodeEnvironment + "-" + unsubscribeData.topic, function (err, response) {
-                    if (err) {
-                        success = false;
-
-                        slackClient.pushNotificationError({
-                            "code": err.errorInfo.code,
-                            "message": err.errorInfo.message
-                        })
-
-                    } else {
-                        success = true;
-                    }
-
-                    return resolve({
-                        success: success
-                    })
-                })
-
-
-            } catch (error) {
-                return reject(error)
-            }
-
-
-        })
-
     }
 
     static pushData(allUserData) {
@@ -301,9 +157,9 @@ module.exports = class pushNotificationsHelper {
                             let result;
 
                             if (subscribeToTopic) {
-                                result = await this.subscribeToTopic(device)
+                                result = await firebaseHelpers.subscribeDeviceToTopic(device.deviceId, device.topic)
                             } else {
-                                result = await this.unsubscribeFromTopic(device);
+                                result = await firebaseHelpers.unsubscribeDeviceFromTopic(device.deviceId, device.topic)
                             }
 
                             if (result !== undefined && result.success) {

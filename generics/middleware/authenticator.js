@@ -69,6 +69,11 @@ module.exports = async function (req, res, next) {
   if (!req.rspObj) req.rspObj = {};
   var rspObj = req.rspObj;
 
+  if (req.path.includes("slack")) {
+    next();
+    return
+  }
+
   if (!token) {
     rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
     rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;

@@ -1,16 +1,17 @@
 /**
- * name : push.js
+ * name : fcm.js
  * author : Aman Jung Karki
- * created-date : 25-Nov-2019
- * Description :  Push notifications.
+ * created-date : 26-Nov-2019
+ * Description :  Push notifications using firebase admin.
  */
 
 const csv = require('csvtojson');
 const userExtensionHelper = require(ROOT_PATH + "/module/user-extension/helper");
-const pushNotificationsHelper = require(ROOT_PATH + "/module/notifications/push/helper");
 const FileStream = require(ROOT_PATH + "/generics/file-stream");
+const firebaseHelpers = require(ROOT_PATH + "/generics/helpers/fcm");
+const fcmHelpers = require(ROOT_PATH + "/module/notifications/fcm/helper")
 
-module.exports = class Notifications {
+module.exports = class Fcm {
 
     /**
      * @apiDefine errorBody
@@ -28,17 +29,17 @@ module.exports = class Notifications {
     }
 
     static get name() {
-        return "push";
+        return "fcm";
     }
 
     /**
-     * @api {post} /kendra/api/v1/notifications/push/registerDevice  Push Notifications To Users
+     * @api {post} /kendra/api/v1/notifications/fcm/registerDevice  Push Notifications To Users
      * @apiVersion 1.0.0
      * @apiName Push Notifications To Users
      * @apiGroup Notifications
      * @apiHeader {String} X-authenticated-user-token Authenticity token
      * @apiParam {File} userData Mandatory userData file of type CSV.
-     * @apiSampleRequest /kendra/api/v1/notifications/push/registerDevice
+     * @apiSampleRequest /kendra/api/v1/notifications/fcm/registerDevice
      * @apiUse successBody
      * @apiUse errorBody
      */
@@ -59,6 +60,7 @@ module.exports = class Notifications {
                 let result = await userExtensionHelper.createOrUpdate(deviceData, _.pick(req.userDetails, ["userId", "email", "userName"]));
 
                 let response = {};
+
                 if (result && result.success) {
 
                     response["result"] = {}
@@ -67,8 +69,7 @@ module.exports = class Notifications {
 
                     await Promise.all(topicArray.map(async topicName => {
 
-                        deviceData.topic = topicName;
-                        let subscribeResult = await pushNotificationsHelper.subscribeToTopic(_.pick(deviceData, ["deviceId", "topic"]));
+                        let subscribeResult = await firebaseHelpers.subscribeDeviceToTopic(deviceData.deviceId, topicName)
 
                         response["result"][topicName] = subscribeResult.success ? "Subscribed" : "Could not subscribee"
 
@@ -93,13 +94,13 @@ module.exports = class Notifications {
     }
 
     /**
-     * @api {post} /kendra/api/v1/notifications/push/pushToUsers  Push Notifications To Users
+     * @api {post} /kendra/api/v1/notifications/fcn/pushToUsers  Push Notifications To Users
      * @apiVersion 1.0.0
      * @apiName Push Notifications To Users
      * @apiGroup Notifications
      * @apiHeader {String} X-authenticated-user-token Authenticity token
      * @apiParam {File} userData Mandatory userData file of type CSV.
-     * @apiSampleRequest /kendra/api/v1/notifications/push/pushToUsers
+     * @apiSampleRequest /kendra/api/v1/notifications/fcm/pushToUsers
      * @apiUse successBody
      * @apiUse errorBody
      */
@@ -128,7 +129,6 @@ module.exports = class Notifications {
                     });
                 })();
 
-
                 await Promise.all(userData.map(async element => {
 
                     let userProfile = await userExtensionHelper.userExtensionDocument({
@@ -141,51 +141,49 @@ module.exports = class Notifications {
 
                     if (userProfile && userProfile.devices.length > 0) {
 
-                        let deviceArray = userProfile.devices;
+                        let matchDeviceData = userProfile.devices.filter(eachUserDevice => {
+                            if (eachUserDevice.app == element.appName && eachUserDevice.status !== "inactive") {
+                                return eachUserDevice
+                            }
+                        })
 
-                        await Promise.all(deviceArray.map(async device => {
+                        if (matchDeviceData.length > 0) {
 
-                            if (device.app == element.appName && device.status !== "inactive") {
-
-                                let notificationResult;
-
-                                device.message = element.message;
-                                device.title = element.title;
+                            await Promise.all(matchDeviceData.map(async device => {
 
                                 if (element.message && element.title) {
-                                    notificationResult = await pushNotificationsHelper.createNotificationInAndroid(device);
 
-                                    if (notificationResult !== undefined && notificationResult.success) {
+                                    device.message = element.message;
+                                    device.title = element.title;
 
-                                        let updateStatus = await userExtensionHelper.updateDeviceStatus(device, deviceArray, element.userId)
+                                    let notificationResult = await fcmHelpers.createNotificationInAndroid(device);
 
-                                        //unsubscribe the deviceId from the topic
+                                    if (!notificationResult.success) {
+
+                                        await userExtensionHelper.updateDeviceStatus(device, userProfile.devices, element.userId)
+
                                         let topicArray = ["allUsers", "all-" + device.app + "-users", "all-" + device.app + "-" + device.os + "-users"];
 
                                         await Promise.all(topicArray.map(async topicName => {
 
-                                            device.topic = topicName;
-                                            let unsubscribeResult = await pushNotificationsHelper.unsubscribeFromTopic(device)
+                                            await firebaseHelpers.unsubscribeDeviceFromTopic(device.deviceId, topicName)
                                         }))
 
-                                        element.status = "Success"
-
-                                    }
-                                    else {
-
                                         element.status = "Fail"
+
+                                    } else {
+
+                                        element.status = "Success"
                                     }
 
-                                }
-                                else {
+                                } else {
                                     element.status = "Message or title is not present in csv"
                                 }
+                            }));
 
-                            } else {
-                                element.status = "App name could not be found or status is inactive"
-                            }
-
-                        }));
+                        } else {
+                            element.status = "Device is not there for particular app."
+                        }
 
                     } else {
                         element.status = "No devices found."
@@ -201,8 +199,8 @@ module.exports = class Notifications {
             } catch (error) {
 
                 return reject({
-                    status: error.status || 500,
-                    message: error.message || "Oops! something went wrong.",
+                    status: error.status || httpStatusCode["internal_server_error"].status,
+                    message: error.message || httpStatusCode["internal_server_error"].message,
                     errorObject: error
                 })
 
@@ -213,11 +211,11 @@ module.exports = class Notifications {
 
 
     /**
-    * @api {post} /kendra/api/v1/notifications/push/pushToTopic Push Notification to topic
+    * @api {post} /kendra/api/v1/notifications/fcm/pushToTopic Push Notification to topic
     * @apiVersion 1.0.0
     * @apiName Push Notification to topic
     * @apiGroup Notifications
-    * @apiSampleRequest /kendra/api/v1/notifications/push/pushToTopic
+    * @apiSampleRequest /kendra/api/v1/notifications/fcm/pushToTopic
     * @apiParam {File} pushToTopic Mandatory pushToTopic file of type CSV.    
     * @apiUse successBody
     * @apiUse errorBody
@@ -248,7 +246,7 @@ module.exports = class Notifications {
 
                 await Promise.all(topicData.map(async singleTopicData => {
 
-                    let topicCsvData = await pushNotificationsHelper.pushData(singleTopicData)
+                    let topicCsvData = await fcmHelpers.pushData(singleTopicData)
 
                     input.push(topicCsvData)
 
@@ -259,8 +257,8 @@ module.exports = class Notifications {
             } catch (error) {
 
                 return reject({
-                    status: error.status || 500,
-                    message: error.message || "Oops! something went wrong.",
+                    status: error.status || httpStatusCode["internal_server_error"].status,
+                    message: error.message || httpStatusCode["internal_server_error"].message,
                     errorObject: error
                 })
 
@@ -271,11 +269,11 @@ module.exports = class Notifications {
 
 
     /**
-    * @api {post} /kendra/api/v1/notifications/push/pushToAllUsers  Push Notification To ALL Users
+    * @api {post} /kendra/api/v1/notifications/fcm/pushToAllUsers  Push Notification To ALL Users
     * @apiVersion 1.0.0
     * @apiName Push Notification To ALL Users Topic
     * @apiGroup Notifications
-    * @apiSampleRequest /kendra/api/v1/notifications/push/pushToAllUsers
+    * @apiSampleRequest /kendra/api/v1/notifications/fcm/pushToAllUsers
     * @apiHeader {String} X-authenticated-user-token Authenticity token
     * @apiParam {File} pushToAllUsers Mandatory pushToAllUsers file of type CSV.        
     * @apiUse successBody
@@ -308,7 +306,7 @@ module.exports = class Notifications {
 
                 await Promise.all(pushToAllUsers.map(async allUserData => {
 
-                    let topicPushStatus = await pushNotificationsHelper.pushData(allUserData)
+                    let topicPushStatus = await fcmHelpers.pushData(allUserData)
 
                     input.push(topicPushStatus)
 
@@ -319,8 +317,8 @@ module.exports = class Notifications {
             } catch (error) {
 
                 return reject({
-                    status: error.status || 500,
-                    message: error.message || "Oops! something went wrong.",
+                    status: error.status || httpStatusCode["internal_server_error"].status,
+                    message: error.message || httpStatusCode["internal_server_error"].message,
                     errorObject: error
                 })
 
@@ -331,11 +329,11 @@ module.exports = class Notifications {
 
 
     /**
-    * @api {post} /kendra/api/v1/notifications/push/subscribeToTopic  Subscribe To Topic
+    * @api {post} /kendra/api/v1/notifications/fcm/subscribeToTopic  Subscribe To Topic
     * @apiVersion 1.0.0
     * @apiName Subscribe To Topic
     * @apiGroup Notifications
-    * @apiSampleRequest /kendra/api/v1/notifications/push/subscribeToTopic
+    * @apiSampleRequest /kendra/api/v1/notifications/fcm/subscribeToTopic
     * @apiHeader {String} X-authenticated-user-token Authenticity token
     * @apiParam {File} subscribeToTopic Mandatory subscribeToTopic file of type CSV.            
     * @apiUse successBody
@@ -367,7 +365,7 @@ module.exports = class Notifications {
 
                 await Promise.all(subscribersData.map(async subscriber => {
 
-                    let subscribeStatus = await pushNotificationsHelper.subscribeOrUnSubscribeData(subscriber, true)
+                    let subscribeStatus = await fcmHelpers.subscribeOrUnSubscribeData(subscriber, true)
 
                     input.push(subscribeStatus)
                 }))
@@ -377,8 +375,8 @@ module.exports = class Notifications {
             } catch (error) {
 
                 return reject({
-                    status: error.status || 500,
-                    message: error.message || "Oops! something went wrong.",
+                    status: error.status || httpStatusCode["internal_server_error"].status,
+                    message: error.message || httpStatusCode["internal_server_error"].message,
                     errorObject: error
                 })
 
@@ -388,11 +386,11 @@ module.exports = class Notifications {
     }
 
     /**
-    * @api {post} /kendra/api/v1/notifications/push/unsubscribeFromTopic  Unsubscribe From Topic
+    * @api {post} /kendra/api/v1/notifications/fcm/unsubscribeFromTopic  Unsubscribe From Topic
     * @apiVersion 1.0.0
     * @apiName Unsubscribe From Topic
     * @apiGroup Notifications
-    * @apiSampleRequest /kendra/api/v1/notifications/push/unsubscribeFromTopic
+    * @apiSampleRequest /kendra/api/v1/notifications/fcm/unsubscribeFromTopic
     * @apiHeader {String} X-authenticated-user-token Authenticity token
     * @apiParam {File} unsubscribeFromTopic Mandatory unsubscribeFromTopic file of type CSV.                
     * @apiUse successBody
@@ -425,7 +423,7 @@ module.exports = class Notifications {
 
                 await Promise.all(unsubscribersData.map(async unsubscriber => {
 
-                    let unSubscribeStatus = await pushNotificationsHelper.subscribeOrUnSubscribeData(unsubscriber)
+                    let unSubscribeStatus = await fcmHelpers.subscribeOrUnSubscribeData(unsubscriber)
 
                     input.push(unSubscribeStatus)
                 }))
@@ -435,8 +433,8 @@ module.exports = class Notifications {
             } catch (error) {
 
                 return reject({
-                    status: error.status || 500,
-                    message: error.message || "Oops! something went wrong.",
+                    status: error.status || httpStatusCode["internal_server_error"].status,
+                    message: error.message || httpStatusCode["internal_server_error"].message,
                     errorObject: error
                 })
 

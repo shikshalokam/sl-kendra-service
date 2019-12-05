@@ -60,8 +60,7 @@ const configuration = {
   Kafka_Config: {
     host: process.env.KAFKA_URL,
     topics: {
-      notificationsTopic: process.env.NOTIFICATIONS_TOPIC || "sl-notifications-dev",
-      languagesTopic: process.env.LANGUAGE_TOPIC || "sl-languages-dev"
+      notificationsTopic: process.env.NOTIFICATIONS_TOPIC || "sl-notifications-dev"
     }
   },
   Elasticsearch_Config: {
