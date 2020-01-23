@@ -426,7 +426,7 @@ module.exports = class InAppNotificationsHelper {
             try {
 
                 let getAllDevices = 
-                await userExtensionHelper.profileWithEntityDetails({
+                await userExtensionHelper.userExtensionDocument({
                     userId: userId,
                     status: "active",
                     isDeleted: false
