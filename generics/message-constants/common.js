@@ -15,5 +15,11 @@ module.exports = {
     NAME : "name",
     ENTITYTYPE : "entityType",
     GROUPS : "groups"
+  },
+  endPoints : {
+    createProfile : "/userProfile/create",
+    updateProfile : "/userProfile/update",
+    verifyProfile : "/userProfile/verify",
+    platformUserProfile : "/platformUserRoles/getProfile"
   }
 };
