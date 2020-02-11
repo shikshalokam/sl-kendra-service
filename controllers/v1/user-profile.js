@@ -20,6 +20,48 @@ module.exports = class UserProfile {
     return "user-profile";
   }
 
+   /**
+     * @api {post} /kendra/api/v1/user-profile/create 
+     * Create user profile.
+     * @apiVersion 1.0.0
+     * @apiGroup Email
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiSampleRequest /kendra/api/v1/user-profile/create
+     * @apiUse successBody
+     * @apiUse errorBody
+     * @apiParamExample {json} Response:
+     * {
+     * "firstName" : "Abc",
+     * "lastName" : null,
+        "emailId" : null,
+        "phoneNumber" : null,
+        "state" : "abc",
+        "district" : null,
+        "block" : null,
+        "zone" : null,
+        "cluster" : null,
+        "taluk" : null,
+        "hub" : null,
+        "school" : null,
+        "status" : "active",
+        "isDeleted" : false,
+        "verified" : false,
+        "updatedBy" : null,
+        "updatedAt" : null,
+        "userId" : "abc",
+        "externalId" : null,
+        "createdBy" : "abc"
+      }
+  */
+
+  /**
+   * Create user profile.
+   * @method
+   * @name create
+   * @param  {Request}  req  request body.
+   * @returns {json} Created user profile information.
+  */
+
   create(req) {
     return new Promise(async (resolve, reject) => {
 
@@ -47,6 +89,29 @@ module.exports = class UserProfile {
     });
   }
 
+   /**
+     * @api {post} /kendra/api/v1/user-profile/update 
+     * Updated user profile information.
+     * @apiVersion 1.0.0
+     * @apiGroup Email
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiSampleRequest /kendra/api/v1/user-profile/update
+     * @apiUse successBody
+     * @apiUse errorBody
+     * @apiParamExample {json} Response:
+     * {
+     * "firstName" : "Abc"
+      }
+  */
+
+    /**
+   * Update user profile information.
+   * @method
+   * @name update
+   * @param  {Request}  req  request body.
+   * @returns {json} Updated user profile information.
+  */
+
   update(req) {
     return new Promise(async (resolve, reject) => {
 
@@ -73,6 +138,25 @@ module.exports = class UserProfile {
       }
     });
   }
+
+  /**
+   * Verify user profile information based on userId.
+   * @method
+   * @name verify
+   * @param  {Request} req request body.
+   * @returns {json} Verify user profile information.
+  */
+
+   /**
+     * @api {post} /kendra/api/v1/user-profile/verify/:userId 
+     * Verify user profile information.
+     * @apiVersion 1.0.0
+     * @apiGroup Email
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiSampleRequest /kendra/api/v1/user-profile/verify/abc
+     * @apiUse successBody
+     * @apiUse errorBody
+  */
 
   verify(req) {
     return new Promise(async (resolve, reject) => {

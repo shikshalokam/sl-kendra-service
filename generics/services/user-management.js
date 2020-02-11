@@ -7,11 +7,8 @@
 
 //dependencies
 
-const slackClient = 
-require(ROOT_PATH + "/generics/helpers/slack-communications");
-
 let urlPrefix = 
-process.env.APPLICATION_BASE_HOST + 
+process.env.USER_MANAGEMENT_HOST + 
 process.env.USER_MANAGEMENT_BASE_URL +
 process.env.URL_PREFIX; 
 
