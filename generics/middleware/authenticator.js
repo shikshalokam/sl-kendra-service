@@ -98,7 +98,7 @@ module.exports = async function (req, res, next) {
     return
   }
 
-  if (req.path.includes("keywords")) {
+  if (req.path.includes("keywords") || req.path.includes("uploadFile1")) {
     if(req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
       rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
       rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;
@@ -109,6 +109,7 @@ module.exports = async function (req, res, next) {
       return;
     }
   }
+
 
   if (!token) {
     rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;

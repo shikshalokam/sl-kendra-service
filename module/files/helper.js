@@ -35,6 +35,22 @@ module.exports = class FilesHelper {
         return new Promise(async (resolve, reject) => {
             try {
 
+                // let filePath = file;
+
+                if(file.data){
+
+                    if( !fs.existsSync(`${ROOT_PATH}${process.env.CLOUD_PATH}`) ) {
+                        fs.mkdirSync(`${ROOT_PATH}${process.env.CLOUD_PATH}`);
+                    }
+                    let randomNuumber = Math.floor(Math.random() * (100000 - 1) + 1);
+                    var timestamp = Math.floor(new Date() / 1000);
+                    let fileName = timestamp + "_" + randomNuumber + file.name;
+                    
+                    let filePath  = `${ROOT_PATH}${process.env.CLOUD_PATH}`+"/"+fileName;
+                    fs.writeFileSync(filePath,file.data);
+                    file = filePath;
+                }
+
                 let result;
                 if (process.env.CLOUD_STORAGE === constants.common.AWS_SERVICE) {
                     result = await awsServices.uploadFile(
@@ -372,58 +388,59 @@ module.exports = class FilesHelper {
        * @return {String} name - name of the file
      */
 
-    static uploadToPresignedUrl(url, file,name) {
-        return new Promise(async (resolve, reject) => {
-            try {
+   /**
+      * Upload file in different services based on cloud storage provided.
+      * @method
+      * @name upload
+      * @param  {file}  - file to upload.
+      * @param  {filePathForBucket}  - file path where the file should upload.
+      * @param {String} - bucketName
+      * @returns {json} Response consists of links of uploaded file.
+    */
 
-                if( !fs.existsSync(`${ROOT_PATH}${process.env.CLOUD_PATH}`) ) {
-                    fs.mkdirSync(`${ROOT_PATH}${process.env.CLOUD_PATH}`);
+   static uploadFile(file, filePathForBucket, bucketName,storage) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+                if( !fs.existsSync(`${ROOT_PATH}${process.env.UPLOAD_PATH}`) ) {
+                    fs.mkdirSync(`${ROOT_PATH}${process.env.UPLOAD_PATH}`);
                 }
-
-               
                 let randomNuumber = Math.floor(Math.random() * (100000 - 1) + 1);
                 var timestamp = Math.floor(new Date() / 1000);
-                let fileName = timestamp + "_" + randomNuumber + name;
-                
-                let filePath  = `${ROOT_PATH}${process.env.CLOUD_PATH}`+"/"+fileName;
 
+                let fileName = timestamp + "_" + randomNuumber + file.name;
+               
+                let filePath  = `${ROOT_PATH}${process.env.UPLOAD_PATH}`+"/"+fileName;
                 fs.writeFileSync(filePath,file.data);
-                let options = {
-                    "headers": {
-                        'Content-Type': "multipart/form-data"
-                    },
-                    body: fs.createReadStream(filePath)
-                };
-    
-                request.put(url, options, callback);
-                function callback(err, data) {
-                    if (err) {
-
-                        fs.unlink(filePath);
-                        return reject({
-                            message: "server down"
-                        });
-                    } else {
-    
-                        fs.unlink(filePath);
-                        if(data.statusCode ==  httpStatusCode["ok"].status){
-                            return resolve({  
-                                message:constants.apiResponses.FILE_UPLOADED
-                        });
-                        }else{
-                            return reject({ 
-                                message:constants.apiResponses.FAILED_TO_UPLOAD
-                            });
-                        }
-                        
-                    }
-                }
-            } catch (error) {
-                return reject(error);
+             
+          
+            let result;
+            if (storage === constants.common.AWS_SERVICE) {
+                result = await awsServices.uploadFile(
+                    filePath,
+                    filePathForBucket,
+                    bucketName
+                );
+            } else if (storage === constants.common.GOOGLE_CLOUD_SERVICE) {
+                result = await googleCloudServices.uploadFile(
+                    filePath,
+                    filePathForBucket,
+                    bucketName
+                )
+            } else if (storage === constants.common.AZURE_SERVICE) {
+                result = await azureService.uploadFile(
+                    filePath,
+                    filePathForBucket,
+                    bucketName
+                )
             }
-        })
-    }
-
+            fs.unlink(filePath);
+            return resolve({ result: result });
+        } catch (error) {
+            return reject(error);
+        }
+    })
+}
 }
 
 
@@ -452,7 +469,8 @@ function _getLinkFromCloudService(filePath, bucketName, cloudStorage) {
                     filePath,
                     bucketName
                 );
-            } else if (cloudStorage === constants.common.AZURE_SERVICE) {
+
+             } else if (cloudStorage === constants.common.AZURE_SERVICE) {
                 result = await azureService.getDownloadableUrl(
                     filePath,
                     bucketName
