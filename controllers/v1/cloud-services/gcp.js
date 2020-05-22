@@ -180,5 +180,79 @@ module.exports = class Gcp {
     })
    }
 
+
+       /**
+     * @api {post} /kendra/api/v1/cloud-services/gcp/uploadToPresignedUrl  
+     * upload file to presignedUrl
+     * @apiVersion 1.0.0
+     * @apiGroup Gcp
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiParamExample {json} Request:
+     * {
+     * "presignedUrl" : "https://storage.googleapis.com/sl-dev-storage/qrcode/R2I3A5/R2I3A5.png?GoogleAccessId=sl-dev-storage%40shikshalokam.iam.gserviceaccount.com&Expires=1587437414&Signature=N7yg1ixFXPG14vOxw7zPxMSm98qDoeY7IYtB8iRnSQRYTNwWRfAT7MqvLT3HW9iXexABEhhWPEDhVQt0J42BzY1it3mFMV1C9xgCl8Q%2BhuMVY746GIdapGEJEhicMGIeEVRy%2FItfuNg9UxcZyk1M3TU%2FEabQLCjAgMthnUvQ8tCqiH%2B1t%2FcJDODAvLv96sQVbO%2Fg4aW%2Bz3GGmtx39Kq%2FRTWVgxLBWu5wPs5PuDq7Xg6HSiD9peQylb7wRStkkuRP%2FMyjIhOuQTtgzPdNFV26I5WZu2Eu2EM5Hx6vDAYjXTOHuOry8fX6od5gcHMSjo9J645nNcN8tb97BIuG%2BgKOcg%3D%3D"
+     * "fileName":"filename.csv"
+     * }
+     * @apiSampleRequest /kendra/api/v1/cloud-services/gcp/uploadToPresignedUrl
+     * @apiUse successBody
+     * @apiUse errorBody
+     * @apiParamExample {json} Response:
+     * {
+     * "message": "File Uploaded successfully",
+     * "status": 200,
+     * }
+     */
+
+    /**
+      * To upload file cloud 
+      * @method
+      * @name upload
+      * @param  {Request}  req  request body.
+      * @param  {files}  req.files.file -actual file to upload
+      * @param  {String}  req.body.presignedUrl -cloud url to upload
+      * @param  {String}  req.body.fileName - name of file
+      * @returns {JSON} Response with status and message.
+    */
+   async uploadToPresignedUrl(req) {
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            if(req.files && req.body.presignedUrl && req.body.fileName){
+            let response  = await filesHelpers.uploadToPresignedUrl(
+                req.body.presignedUrl,
+                req.files.file,
+                req.body.fileName,
+           );
+            return resolve(response);
+
+            }else{
+                return reject({
+                    status:
+                        httpStatusCode["bad_request"].status,
+                    message:httpStatusCode["bad_request"].message
+
+                });
+            }
+            
+
+        } catch (error) {
+            
+            console.log(error);
+            return reject({
+                status:
+                    error.status ||
+                    httpStatusCode["internal_server_error"].status,
+
+                message:
+                    error.message
+                    || httpStatusCode["internal_server_error"].message,
+
+                errorObject: error
+            })
+
+        }
+    })
+   }
+
 };
 

@@ -9,6 +9,7 @@
 // Dependencies
 const Zip = require("adm-zip");
 const fs = require("fs");
+const request = require("request");
 const awsServices = require(ROOT_PATH + "/generics/services/aws");
 const googleCloudServices = require(ROOT_PATH + "/generics/services/google-cloud");
 const azureService = require(ROOT_PATH + "/generics/services/azure");
@@ -361,6 +362,67 @@ module.exports = class FilesHelper {
         _removeFolder(path);
         return;
     };
+
+        /**
+       * Save the file in cloud
+       * @method
+       * @name uploadToPresignedUrl
+       * @param  {String} url  - presignedUrl
+       * @param  {File}  file - file data
+       * @return {String} name - name of the file
+     */
+
+    static uploadToPresignedUrl(url, file,name) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                if( !fs.existsSync(`${ROOT_PATH}${process.env.CLOUD_PATH}`) ) {
+                    fs.mkdirSync(`${ROOT_PATH}${process.env.CLOUD_PATH}`);
+                }
+
+               
+                let randomNuumber = Math.floor(Math.random() * (100000 - 1) + 1);
+                var timestamp = Math.floor(new Date() / 1000);
+                let fileName = timestamp + "_" + randomNuumber + name;
+                
+                let filePath  = `${ROOT_PATH}${process.env.CLOUD_PATH}`+"/"+fileName;
+
+                fs.writeFileSync(filePath,file.data);
+                let options = {
+                    "headers": {
+                        'Content-Type': "multipart/form-data"
+                    },
+                    body: fs.createReadStream(filePath)
+                };
+    
+                request.put(url, options, callback);
+                function callback(err, data) {
+                    if (err) {
+
+                        fs.unlink(filePath);
+                        return reject({
+                            message: "server down"
+                        });
+                    } else {
+    
+                        fs.unlink(filePath);
+                        if(data.statusCode ==  httpStatusCode["ok"].status){
+                            return resolve({  
+                                message:constants.apiResponses.FILE_UPLOADED
+                        });
+                        }else{
+                            return reject({ 
+                                message:constants.apiResponses.FAILED_TO_UPLOAD
+                            });
+                        }
+                        
+                    }
+                }
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
 
 }
 
