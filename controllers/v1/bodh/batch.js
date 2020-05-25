@@ -16,9 +16,9 @@ const bodhHelper = require(MODULES_BASE_PATH + "/bodh/helper");
 
 module.exports = class Batch extends Abstract {
 
-    // constructor() {
-    //     super(schemas["user-courses"]);
-    // }
+    constructor() {
+        super(schemas["user-courses"]);
+    }
         
 
     /**
