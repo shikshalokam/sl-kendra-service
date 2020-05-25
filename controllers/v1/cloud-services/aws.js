@@ -72,8 +72,6 @@ module.exports = class Aws {
 
             try {
 
-                req.body.bucketName)
-
                 let downloadableUrl =
                 await filesHelpers.getDownloadableUrl(
                      req.body.filePaths, 
