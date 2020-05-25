@@ -72,6 +72,7 @@ module.exports = class Aws {
 
             try {
 
+          
                 let downloadableUrl =
                 await filesHelpers.getDownloadableUrl(
                      req.body.filePaths, 
@@ -198,6 +199,7 @@ module.exports = class Aws {
      * @apiParamExample {json} Response:
      * {
      * "status": 200,
+     *  "message":"File uploaded successfully",
      *  "result": {
      *   "kind": "storage#object",
      *   "id": "sl-dev-storage/my.csv/1590132715837085",

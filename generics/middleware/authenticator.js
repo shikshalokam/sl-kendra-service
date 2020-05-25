@@ -98,7 +98,8 @@ module.exports = async function (req, res, next) {
     return
   }
 
-  if (req.path.includes("keywords") || req.path.includes("uploadFile1")) {
+  if (req.path.includes("keywords") || req.path.includes("/aws/uploadFile") || 
+  req.path.includes("/gcp/uploadFile") || req.path.includes("/azure/uploadFile")) {
     if(req.headers["internal-access-token"] !== process.env.INTERNAL_ACCESS_TOKEN) {
       rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
       rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;

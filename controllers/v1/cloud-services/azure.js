@@ -261,6 +261,7 @@ module.exports = class Azure {
      * @apiParamExample {json} Response:
      * {
      * "status": 200,
+     * "message":"File uploaded successfully",
      *  "result": {
      *   "kind": "storage#object",
      *   "id": "sl-dev-storage/my.csv/1590132715837085",
@@ -298,16 +299,14 @@ module.exports = class Azure {
     return new Promise(async (resolve, reject) => {
 
         try {
-
             if(req.files && req.body.filePath && req.body.bucketName){
-            let response  = await filesHelpers.uploadFile(
-                req.files.file,
-                req.body.filePath,
-                req.body.bucketName,
-                constants.common.AZURE_SERVICE
-           );
-            return resolve(response);
-
+                let response  = await filesHelpers.uploadFile(
+                    req.files.file,
+                    req.body.filePath,
+                    req.body.bucketName,
+                    constants.common.AZURE_SERVICE
+                );
+                return resolve(response);
             }else{
                 return reject({
                     status:
@@ -316,10 +315,7 @@ module.exports = class Azure {
 
                 });
             }
-       
-        } catch (error) {
-            
-            console.log(error);
+        } catch (error) {     
             return reject({
                 status:
                     error.status ||
@@ -331,7 +327,6 @@ module.exports = class Azure {
 
                 errorObject: error
             })
-
         }
     })
    }
