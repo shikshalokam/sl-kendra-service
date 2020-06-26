@@ -110,6 +110,23 @@ module.exports = async function (req, res, next) {
     }
   }
 
+  let paths = ["/gcp/staticImages"]
+
+  for (
+    let pointerToByPassPath = 0; 
+    pointerToByPassPath < paths.length; 
+    pointerToByPassPath++
+  ) {
+    if (
+      req.path.includes(paths[pointerToByPassPath]) ||  
+      req.headers["internal-access-token"] === process.env.INTERNAL_ACCESS_TOKEN
+    ) {
+      req.setTimeout(120000);
+      next();
+      return
+    }
+  }
+
   if (!token) {
     rspObj.errCode = reqMsg.TOKEN.MISSING_CODE;
     rspObj.errMsg = reqMsg.TOKEN.MISSING_MESSAGE;

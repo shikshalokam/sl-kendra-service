@@ -362,6 +362,71 @@ module.exports = class FilesHelper {
         return;
     };
 
+    /**
+       * Get static images.
+       * @method
+       * @name staticImages
+       * @param  {Array} fileNames - File names.
+       * @param  {String} bucketName - Bucket name.
+       * @param  {String} storageName - Storage name.
+       * @returns {Array} - Static images and name.
+     */
+
+    static staticImages(fileNames, bucketName, storageName = "") {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let cloudStorage = process.env.CLOUD_STORAGE;
+
+                if (storageName !== "") {
+                    cloudStorage = storageName;
+                }
+
+                let result = "";
+
+                if (Array.isArray(fileNames) && fileNames.length > 0) {
+
+                    result = [];
+                    
+                    await Promise.all(fileNames.map(async fileName => {
+
+                        let image = 
+                        await  _getStaticImages(
+                            fileName,
+                            bucketName,
+                            cloudStorage
+                        );
+
+                        result.push({
+                            name : fileName ,
+                            url : image 
+                        })
+
+                    }));
+                    
+                } else {
+
+                    let image = await _getStaticImages(
+                        fileNames,
+                        bucketName,
+                        cloudStorage
+                    );
+
+                    result = {
+                        name : fileName,
+                        url : image 
+                    };
+                }
+
+                return resolve({
+                    result : result
+                });
+
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    }
 }
 
 
@@ -429,3 +494,38 @@ function _removeFolder(path) {
         fs.rmdirSync(path);
     }
 }
+
+/**
+       * Get static images.
+       * @method
+       * @name _getStaticImages
+       * @param  {String} fileName  - File name.
+       * @param  {String} bucketName  - Name of the bucket.
+       * @param  {String} cloudStorage  - cloud storage.
+       * @return {object} - static image name and url.
+     */
+
+    function _getStaticImages(fileName, bucketName, cloudStorage) {
+
+        return new Promise(async function (resolve, reject) {
+            try {
+    
+                let result;
+    
+                if ( cloudStorage === constants.common.GOOGLE_CLOUD_SERVICE ) {
+                    result = await googleCloudServices.getStaticUrl(
+                        fileName,
+                        bucketName
+                    );
+
+                }
+    
+                return resolve(result);
+                
+            } catch (error) {
+                return reject(error);
+            }
+    
+        })
+    
+    }

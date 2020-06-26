@@ -104,7 +104,6 @@ module.exports = class Gcp {
 
     }
 
-
     /**
      * @api {post} /kendra/api/v1/cloud-services/gcp/preSignedUrls  
      * Get signed URL.
@@ -164,6 +163,76 @@ module.exports = class Gcp {
         } catch (error) {
             
             console.log(error);
+            return reject({
+                status:
+                    error.status ||
+                    httpStatusCode["internal_server_error"].status,
+
+                message:
+                    error.message
+                    || httpStatusCode["internal_server_error"].message,
+
+                errorObject: error
+            })
+
+        }
+    })
+   }
+
+   /**
+     * @api {post} /kendra/api/v1/cloud-services/gcp/staticImages  
+     * Static image url.
+     * @apiVersion 1.0.0
+     * @apiGroup Gcp
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiParamExample {json} Request:
+     * {
+     * "fileNames" : [
+     * "static/categories/individualAssessments.png"
+     * ],
+     * "bucket" : "sl-dev-storage"
+     * }
+     * @apiSampleRequest /kendra/api/v1/cloud-services/gcp/staticImages
+     * @apiUse successBody
+     * @apiUse errorBody
+     * @apiParamExample {json} Response:
+     * {
+     * "message": "Url generated successfully",
+     * "status": 200,
+     * "result": [
+     * {
+     * "name": "static/categories/individualAssessments.png",
+     * "url": "https://storage.googleapis.com/sl-dev-storage/static/categories/individualAssessments.png"
+     * }
+     * ]}
+     */
+    
+     /**
+      * Static image url.
+      * @method
+      * @name staticImages
+      * @param  {Request}  req  request body.
+      * @param  {Array}  req.body.fileNames - list of file names
+      * @param  {String}  req.body.bucket - name of the bucket 
+      * @returns {JSON} Response with status and message.
+    */
+
+   async staticImages(req) {
+    return new Promise(async (resolve, reject) => {
+
+        try {
+
+            let staticImagesData =
+            await filesHelpers.staticImages(
+                 req.body.fileNames,
+                 req.body.bucket,
+                 constants.common.GOOGLE_CLOUD_SERVICE
+            );
+
+            return resolve(staticImagesData);
+
+        } catch (error) {
+
             return reject({
                 status:
                     error.status ||

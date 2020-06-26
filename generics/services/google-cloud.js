@@ -121,8 +121,22 @@ let signedUrl = ( fileName , bucketName ) => {
   })
 }
 
+/**
+  * Get static url.
+  * @function
+  * @name getStaticUrl
+  * @param fileName - Name of the file name.
+  * @param bucketName - Name of the bucket.
+  * @returns {String} - static  image url.
+*/
+
+let getStaticUrl = ( filename,bucketName) =>{
+  return `http://storage.googleapis.com/${bucketName}/${filename}`
+}
+
 module.exports = {
     uploadFile: uploadFile,
     getDownloadableUrl : getDownloadableUrl,
-    signedUrl : signedUrl
+    signedUrl : signedUrl,
+    getStaticUrl : getStaticUrl
 };

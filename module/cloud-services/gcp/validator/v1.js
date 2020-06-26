@@ -16,6 +16,10 @@ module.exports = (req) => {
         getSignedUrls : function() {
             req.checkBody('fileNames').exists().withMessage("required file names");
             req.checkBody('bucket').exists().withMessage("required bucket name");
+        },
+        staticImages : function() {
+            req.checkBody('fileNames').exists().withMessage("required file names");
+            req.checkBody('bucket').exists().withMessage("required bucket name");
         }
     }
 
