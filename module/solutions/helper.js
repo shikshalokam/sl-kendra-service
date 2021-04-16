@@ -1247,7 +1247,7 @@ module.exports = class SolutionsHelper {
                     );
 
                     mergedData = mergedData.map( data => {
-                        if( data.programId && programs[data.programId.toString()] ) {
+                        if( data.programId && programs[data.programId.toString()]) {
                             data.programName = programs[data.programId.toString()].name;
                         }
                         return data;
