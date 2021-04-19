@@ -1296,7 +1296,7 @@ module.exports = class SolutionsHelper {
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
                         }
-                        
+
                         mergedData.push(targetedSolution);
                         delete targetedSolution.type; 
                         delete targetedSolution.externalId;
