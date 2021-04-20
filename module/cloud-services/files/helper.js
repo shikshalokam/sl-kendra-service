@@ -78,7 +78,7 @@ module.exports = class FilesHelper {
                 }
 
           } else {
-            
+           
             let folderPath = "";
 
             if (referenceType == constants.common.DHITI) {
