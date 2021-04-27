@@ -115,6 +115,61 @@ module.exports = class FilesHelper {
       }
     })
   }
+
+    /**
+     * Get Downloadable URL from cloud.
+     * @method
+     * @name getDownloadableUrl
+     * @param {Array} payloadData - payload for files data.
+     * @returns {JSON} Response with status and message.
+   */
+
+    static getDownloadableUrl(payloadData) {
+      return new Promise(async (resolve, reject) => {
+  
+        try {
+  
+          let bucketName = "";
+          let cloudStorage = process.env.CLOUD_STORAGE;
+  
+          if (cloudStorage === "AWS") {
+            bucketName = process.env.AWS_BUCKET_NAME;
+          } else if (cloudStorage === "GC") {
+            bucketName = process.env.GCP_BUCKET_NAME;
+          } else {
+            bucketName = process.env.AZURE_STORAGE_CONTAINER;
+          }
+  
+          let downloadableUrl =
+            await filesHelpers.getDownloadableUrl(
+              payloadData,
+              bucketName,
+              cloudStorage
+            );
+  
+          return resolve({
+            message: constants.apiResponses.CLOUD_SERVICE_SUCCESS_MESSAGE,
+            result: downloadableUrl
+          })
+  
+        } catch (error) {
+  
+          return reject({
+            status:
+              error.status ||
+              httpStatusCode["internal_server_error"].status,
+  
+            message:
+              error.message
+              || httpStatusCode["internal_server_error"].message,
+  
+            errorObject: error
+          })
+  
+        }
+      })
+  
+    }
 }
 
 
