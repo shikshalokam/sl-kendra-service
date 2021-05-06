@@ -1272,35 +1272,24 @@ module.exports = class SolutionsHelper {
             }
           }
 
-          let targetedSolutions = {};
+          let targetedSolutions = {
+            success : false
+          };
 
-          if (solutionType === constants.common.SURVEY && surveyReportPage == "true"){
-            targetedSolutions.success = false;
+          surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
+
+          if ( !surveyReportPage ) {
               
-          } else if (solutionType === constants.common.SURVEY && surveyReportPage == "false"){
-              targetedSolutions = 
-              await this.forUserRoleAndLocation(
-                requestedData,
-                solutionType,
-                "",
-                "",
-                constants.common.DEFAULT_PAGE_SIZE,
-                constants.common.DEFAULT_PAGE_NO,
-                search
-              )
-              
-          } else {
-              targetedSolutions = 
-              await this.forUserRoleAndLocation(
-                requestedData,
-                solutionType,
-                "",
-                "",
-                constants.common.DEFAULT_PAGE_SIZE,
-                constants.common.DEFAULT_PAGE_NO,
-                search
-              )
-              
+            targetedSolutions = 
+            await this.forUserRoleAndLocation(
+              requestedData,
+              solutionType,
+              "",
+              "",
+              constants.common.DEFAULT_PAGE_SIZE,
+              constants.common.DEFAULT_PAGE_NO,
+              search
+            ); 
           }
 
         if( targetedSolutions.success ) {
