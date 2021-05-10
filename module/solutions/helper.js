@@ -1200,7 +1200,7 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static targetedSolutions(requestedData,solutionType,userToken,pageSize,pageNo,search,filter) {
+  static targetedSolutions(requestedData,solutionType,userToken,pageSize,pageNo,search,filter, surveyReportPage = "") {
     return new Promise(async (resolve, reject) => {
         try {
 
@@ -1208,7 +1208,8 @@ module.exports = class SolutionsHelper {
             solutionType,
             userToken,
             search,
-            filter
+            filter,
+            surveyReportPage
           );
 
           let totalCount = 0;
@@ -1271,16 +1272,25 @@ module.exports = class SolutionsHelper {
             }
           }
 
-          let targetedSolutions = 
-          await this.forUserRoleAndLocation(
-            requestedData,
-            solutionType,
-            "",
-            "",
-            constants.common.DEFAULT_PAGE_SIZE,
-            constants.common.DEFAULT_PAGE_NO,
-            search
-          )
+          let targetedSolutions = {
+            success : false
+          };
+
+          surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
+
+          if ( !surveyReportPage ) {
+              
+            targetedSolutions = 
+            await this.forUserRoleAndLocation(
+              requestedData,
+              solutionType,
+              "",
+              "",
+              constants.common.DEFAULT_PAGE_SIZE,
+              constants.common.DEFAULT_PAGE_NO,
+              search
+            ); 
+          }
 
         if( targetedSolutions.success ) {
 
@@ -1338,7 +1348,7 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static assignedUserSolutions(solutionType,userToken,search,filter ) {
+  static assignedUserSolutions(solutionType,userToken,search,filter, surveyReportPage = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
 
@@ -1358,7 +1368,8 @@ module.exports = class SolutionsHelper {
           await assessmentService.assignedSurveys(
             userToken,
             search,
-            filter
+            filter,
+            surveyReportPage
           );
 
         } else {
