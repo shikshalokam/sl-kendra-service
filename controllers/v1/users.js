@@ -148,6 +148,61 @@ module.exports = class Users extends Abstract {
         })
     }
 
+    /**
+     * @api {get} /kendra/api/v1/users/privatePrograms/:userId List of user private programs
+     * @apiVersion 2.0.0
+     * @apiName List of user private programs
+     * @apiGroup Programs
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiSampleRequest /kendra/api/v1/users/privatePrograms/e97b5582-471c-4649-8401-3cc4249359bb
+     * @apiParamExample {json} Response:
+     * {
+     "message": "List of private programs",
+     "status": 200,
+     "result": [
+        {
+            "_id": "5edf0d14c57dab7f639f3e0d",
+            "externalId": "EF-DCPCR-2018-001-TEMPLATE-2020-06-09 09:46:20",
+            "name": "My program",
+            "description": "DCPCR Assessment Frramework 2018",
+            "isAPrivateProgram" : false
+        }
+     ]}
+     * @apiUse successBody
+     * @apiUse errorBody
+     */
+
+    /**
+    * Private Programs .
+    * @method
+    * @name privatePrograms
+    * @param {Object} req -request Data.
+    * @param {String} req.params._id - user id
+    * @returns {JSON} - List of programs created by user.
+    */
+
+    privatePrograms(req) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                
+                let programsData = 
+                await usersHelper.privatePrograms(
+                    (req.params._id && req.params._id != "") ? 
+                    req.params._id : 
+                    req.userDetails.userId
+                );
+                
+                return resolve(programsData);
+            } catch (error) {
+                return reject({
+                    status: error.status || httpStatusCode.internal_server_error.status,
+                    message: error.message || httpStatusCode.internal_server_error.message,
+                    errorObject: error
+                });
+            }
+        });
+    }
+
      /**
      * @api {post} /kendra/api/v1/users/createProgram/:userId?programId=:programId Users created program and solution.
      * @apiVersion 2.0.0
@@ -627,7 +682,6 @@ module.exports = class Users extends Abstract {
       }
     });
   }
-
 
 /**
      * @api {post} /kendra/api/v1/users/programs?page=:page&limit=:limit&search=:search 
