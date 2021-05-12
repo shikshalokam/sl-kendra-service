@@ -1306,6 +1306,7 @@ module.exports = class SolutionsHelper {
                     targetedSolutions.data.data.forEach(targetedSolution => {
                         targetedSolution.solutionId = targetedSolution._id;
                         targetedSolution._id = "";
+                        targetedSolution["region"] = targetedSolution.region ? targetedSolution.region : "";
                         
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
