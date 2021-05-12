@@ -649,7 +649,9 @@ module.exports = class SolutionsHelper {
             "programId",
             "externalId",
             "projectTemplateId",
-            "type"
+            "type",
+            "region",
+            "language"
           ]  
         );
       
@@ -795,7 +797,9 @@ module.exports = class SolutionsHelper {
             "isAPrivateProgram",
             "projectTemplateId",
             "entityType",
-            "entityTypeId"
+            "entityTypeId",
+            "language",
+            "region"
           ]
         );
 
