@@ -649,7 +649,9 @@ module.exports = class SolutionsHelper {
             "programId",
             "externalId",
             "projectTemplateId",
-            "type"
+            "type",
+            "language",
+            "creator"
           ]  
         );
       
@@ -795,7 +797,9 @@ module.exports = class SolutionsHelper {
             "isAPrivateProgram",
             "projectTemplateId",
             "entityType",
-            "entityTypeId"
+            "entityTypeId",
+            "language",
+            "creator"
           ]
         );
 
@@ -1302,6 +1306,7 @@ module.exports = class SolutionsHelper {
                     targetedSolutions.data.data.forEach(targetedSolution => {
                         targetedSolution.solutionId = targetedSolution._id;
                         targetedSolution._id = "";
+                        targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                         
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
