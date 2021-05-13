@@ -7,6 +7,7 @@
  */
 
 // Dependencies
+
 let filesHelpers = require(ROOT_PATH+"/module/files/helper");
 
 /**
