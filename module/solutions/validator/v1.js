@@ -49,6 +49,9 @@ module.exports = (req) => {
         },
         targetedEntity : function () {
             req.checkParams("_id").exists().withMessage("required solution id");
+        },
+        listByProgramId: function () {
+            req.checkParams("_id").exists().withMessage("required program id");
         }
     }
 

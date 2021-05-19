@@ -15,6 +15,7 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
+const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
 
 module.exports = class UserExtensionHelper {
 
@@ -1024,6 +1025,108 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
     })
 
    }
+
+   /**
+   * List of user platform roles
+   * @method
+   * @name platformRoles
+   * @param {String} userId - Logged in user id.
+   * @returns {Array} 
+   */
+
+  static platformRoles(userId) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            
+            const userInformation = await this.userExtensionDocument
+            (
+                { 
+                    userId: userId,
+                    status: constants.common.ACTIVE,
+                    "platformRoles": {$exists: true,$not: {$size: 0}} 
+               },
+               {
+                   "platformRoles.roleId": 1,"platformRoles.code": 1
+                }
+            );
+   
+           if (!userInformation) {
+               return resolve({
+                   message: constants.apiResponses.NOT_FOUND_USER_PLATFORM_ROLES,
+                   result: []
+               })
+           }
+   
+           const result = userInformation.platformRoles.map(user=> {
+               return {
+                   _id: user.roleId,
+                   code: user.code,
+               }
+           });
+   
+           return resolve({
+               message: constants.apiResponses.USER_PLATFORM_ROLES,
+               data: result
+           });
+        } catch(error) {
+            return reject(error);
+        }
+    })
+  }
+
+    /**
+   * List of programs for platform user
+   * @method
+   * @name programsByPlatformRoles
+   * @param {String} userId - Logged in user id.
+   * @param {String} role - Platform user role.
+   * @returns {Array} 
+   */
+
+    static programsByPlatformRoles(userId,role) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                
+                const userInformation = await this.userExtensionDocument
+                (
+                    { 
+                        userId: userId,
+                        status: constants.common.ACTIVE,
+                        "platformRoles.code": role
+                   },
+                   {
+                       "platformRoles": {$elemMatch: {code: role}}
+                   }
+                );
+       
+               if (!userInformation) {
+                   return resolve({
+                       status: httpStatusCode.bad_request.status,
+                       message: constants.apiResponses.USER_PLATFORM_ROLE_NOT_FOUND
+                   })
+               }
+
+                if (!userInformation.platformRoles[0].programs.length > 0) {
+                   return resolve({
+                    message: constants.apiResponses.PROGRAM_NOT_FOUND,
+                    result: []
+                   })
+                }
+       
+                const programDocuments = await programsHelper.programDocuments({
+                   _id: {$in: userInformation.platformRoles[0].programs},
+                   status: constants.common.ACTIVE 
+                },["externalId","name","description"]);
+       
+                return resolve({
+                   message: constants.apiResponses.PLATFORM_USER_PROGRAMS,
+                   data: programDocuments
+                });
+            } catch(error) {
+                return reject(error);
+            }
+        })
+    }
 };
 
 

@@ -1470,6 +1470,52 @@ module.exports = class SolutionsHelper {
     })
    } 
 
+    /**
+   * List solutions.
+   * @method  
+   * @name listByProgramId
+   * @param {String} programId - Program id.
+   * @returns {JSON} List of solutions.
+   */
+  
+  static listByProgramId(programId) {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+          const programDocuments = 
+          await programsHelper.programDocuments({
+            _id: programId,
+            status: constants.common.ACTIVE
+          },["components"]);
+
+          if (!programDocuments.length > 0) {
+            return resolve({
+              status: httpStatusCode.bad_request.status,
+              message: constants.apiResponses.PROGRAM_NOT_FOUND,
+              result: []
+            })
+          }
+
+          const solutionDocuments = await this.solutionDocuments(
+            {_id: {$in: programDocuments[0].components},isReusable: false},
+            ["externalId","description","name","type","subType","isRubricDriven"]
+          );
+
+          return resolve({
+            message : constants.apiResponses.SOLUTIONS_LIST,
+            data : solutionDocuments
+          });
+            
+        } catch (error) {
+            return resolve({
+              success : false,
+              message : error.message,
+              data : {}
+            });
+        }
+    });
+  }
+
 };
 
  /**
