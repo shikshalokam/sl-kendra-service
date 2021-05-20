@@ -12,8 +12,8 @@ module.exports = (req) => {
             req.checkBody('stateId').exists().withMessage("State id is required");
             req.checkBody('roles').exists().withMessage("Roles data is required");
         },
-        programsByPlatformRoles: function () {
-            req.checkQuery('role').exists().withMessage("Required platform user role");
+        solutionsByPlatformProgram: function () {
+            req.checkParams('_id').exists().withMessage('Required program id');
         }
     }
 

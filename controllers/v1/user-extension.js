@@ -552,13 +552,21 @@ module.exports = class UserExtension extends Abstract {
     "status": 200,
     "result": [
         {
+            "_id": "5f34e44681871d939950bca6",
+            "externalId": "TN-Program-1597301830708",
+            "name": "TN-Program",
+            "description": "TN01-Mantra4Change-APSWREIS School Leader Feedback",
+            "role": "PM"
+        },
+        {
             "_id": "5fa28620b6bd9b757dc4e932",
             "externalId": "SLDP-1604486688019",
             "name": "SLDP",
-            "description": "स्कूल सुरक्षा चेकलिस्ट"
+            "description": "स्कूल सुरक्षा चेकलिस्ट",
+            "role": "PGM"
         }
     ]
-}
+  }
 **/
 
 
@@ -576,6 +584,68 @@ module.exports = class UserExtension extends Abstract {
 
         let programs = await userExtensionHelper.programsByPlatformRoles(
           req.userDetails.userId,
+          req.query.role
+        );
+        
+        programs["result"] = programs.data;
+        return resolve(programs);
+
+      } catch (error) {
+
+        return reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+
+
+    })
+  }
+
+    /**
+  * @api {get} /kendra/api/v1/user-extension/solutionsByPlatformProgram/:programId?role=:role List of solutions for platform user program
+  * @apiVersion 1.0.0
+  * @apiName List of solutions for platform user program
+  * @apiGroup User Extension
+  * @apiHeader {String} X-authenticated-user-token Authenticity token
+  * @apiSampleRequest /kendra/api/v1/user-extension/solutionsByPlatformProgram/5f34e44681871d939950bca6?role=PM
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "Solutions lists fetched successfully",
+    "status": 200,
+    "result": [
+        {
+            "_id": "5f34e44681871d939950bca7",
+            "isRubricDriven": false,
+            "externalId": "dea0b95a-dd11-11ea-a3bf-000d3af02677-OBSERVATION-TEMPLATE-1597301830736",
+            "name": "TN01-Mantra4Change-APSWREIS School Leader Feedback",
+            "description": "TN01-Mantra4Change-APSWREIS School Leader Feedback",
+            "type": "observation",
+            "subType": "school"
+        }
+    ]
+  }
+**/
+
+
+  /**
+   * List of solutions for platform user program
+   * @method
+   * @name solutionsByPlatformProgram
+   * @returns {Array} List of solutions for platform user program
+   */
+
+  solutionsByPlatformProgram(req) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+
+        let programs = await userExtensionHelper.solutionsByPlatformProgram(
+          req.userDetails.userId,
+          req.params._id,
           req.query.role
         );
         
