@@ -12,7 +12,7 @@ module.exports = (req) => {
             req.checkBody('stateId').exists().withMessage("State id is required");
             req.checkBody('roles').exists().withMessage("Roles data is required");
         },
-        solutionsByPlatformProgram: function () {
+        solutions: function () {
             req.checkParams('_id').exists().withMessage('Required program id');
         }
     }

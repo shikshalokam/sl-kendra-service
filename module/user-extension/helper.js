@@ -1155,14 +1155,14 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
      /**
    * List of solutions by platform user program
    * @method
-   * @name solutionsByPlatformProgram
+   * @name solutions
    * @param {String} userId - Logged in user id.
    * @param {String} programId - Program id.
    * @param {String} role - role.
    * @returns {Array} 
    */
 
-    static solutionsByPlatformProgram(userId,programId,role) {
+    static solutions(userId,programId,role) {
         return new Promise(async (resolve, reject) => {
             try {
                 

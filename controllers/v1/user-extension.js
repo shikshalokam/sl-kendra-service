@@ -604,12 +604,12 @@ module.exports = class UserExtension extends Abstract {
   }
 
     /**
-  * @api {get} /kendra/api/v1/user-extension/solutionsByPlatformProgram/:programId?role=:role List of solutions for platform user program
+  * @api {get} /kendra/api/v1/user-extension/solutions/:programId?role=:role List of solutions for platform user program
   * @apiVersion 1.0.0
   * @apiName List of solutions for platform user program
   * @apiGroup User Extension
   * @apiHeader {String} X-authenticated-user-token Authenticity token
-  * @apiSampleRequest /kendra/api/v1/user-extension/solutionsByPlatformProgram/5f34e44681871d939950bca6?role=PM
+  * @apiSampleRequest /kendra/api/v1/user-extension/solutions/5f34e44681871d939950bca6?role=PM
   * @apiUse successBody
   * @apiUse errorBody
   * @apiParamExample {json} Response:
@@ -634,16 +634,16 @@ module.exports = class UserExtension extends Abstract {
   /**
    * List of solutions for platform user program
    * @method
-   * @name solutionsByPlatformProgram
+   * @name solutions
    * @returns {Array} List of solutions for platform user program
    */
 
-  solutionsByPlatformProgram(req) {
+  solutions(req) {
     return new Promise(async (resolve, reject) => {
 
       try {
 
-        let programs = await userExtensionHelper.solutionsByPlatformProgram(
+        let programs = await userExtensionHelper.solutions(
           req.userDetails.userId,
           req.params._id,
           req.query.role
