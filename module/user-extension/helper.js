@@ -1027,54 +1027,6 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
 
    }
 
-   /**
-   * List of user platform roles
-   * @method
-   * @name platformRoles
-   * @param {String} userId - Logged in user id.
-   * @returns {Array} 
-   */
-
-  static platformRoles(userId) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            
-            const userInformation = await this.userExtensionDocument
-            (
-                { 
-                    userId: userId,
-                    status: constants.common.ACTIVE,
-                    "platformRoles": {$exists: true,$not: {$size: 0}} 
-               },
-               {
-                   "platformRoles.roleId": 1,"platformRoles.code": 1
-                }
-            );
-   
-           if (!userInformation) {
-               return resolve({
-                   message: constants.apiResponses.NOT_FOUND_USER_PLATFORM_ROLES,
-                   result: []
-               })
-           }
-   
-           const result = userInformation.platformRoles.map(user=> {
-               return {
-                   _id: user.roleId,
-                   code: user.code,
-               }
-           });
-   
-           return resolve({
-               message: constants.apiResponses.USER_PLATFORM_ROLES,
-               data: result
-           });
-        } catch(error) {
-            return reject(error);
-        }
-    })
-  }
-
     /**
    * List of programs for platform user
    * @method
@@ -1088,7 +1040,7 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
         return new Promise(async (resolve, reject) => {
             try {
 
-                let updateQuery = {
+                let projection = {
                     "platformRoles": 1
                 };
 
@@ -1099,12 +1051,12 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
 
                 if (role) {
                     findQuery["platformRoles.code"] = role;
-                    updateQuery = {
+                    projection = {
                         "platformRoles": {$elemMatch: {code: role}}
                     }
                 }
                 
-                const userInformation = await this.userExtensionDocument(findQuery,updateQuery);
+                const userInformation = await this.userExtensionDocument(findQuery,projection);
        
                 if (!userInformation) {
                    return resolve({
@@ -1190,7 +1142,7 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 const programDocuments = await programsHelper.programDocuments({
                    _id: programId,
                    status: constants.common.ACTIVE 
-                },["externalId","name","description"]);
+                },["components"]);
 
                 if (!programDocuments.length > 0) {
                     return resolve({
@@ -1200,6 +1152,7 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 }
 
                 const solutionDocuments = await solutionsHelper.solutionDocuments({
+                    _id: {$in: programDocuments[0].components},
                     programId: programId,
                     isReusable: false
                 },[
