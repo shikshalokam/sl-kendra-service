@@ -1050,10 +1050,8 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 }
 
                 if (role) {
-                    findQuery["platformRoles.code"] = role;
-                    projection = {
-                        "platformRoles": {$elemMatch: {code: role}}
-                    }
+                    let roleArray = role.split(',');
+                    findQuery["platformRoles.code"] =  {$in: roleArray};
                 }
                 
                 const userInformation = await this.userExtensionDocument(findQuery,projection);
@@ -1069,14 +1067,27 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
                 if (userInformation.platformRoles && userInformation.platformRoles.length > 0) {
                     let programIds = [];
                     let programMapToRole = {};
-                    userInformation.platformRoles.forEach(platformRole=> {
-                        if (platformRole.programs && platformRole.programs.length > 0) {
-                            platformRole.programs.forEach(program => {
-                                programMapToRole[program.toString()] = platformRole.code;
-                                programIds.push(program);
-                            })
+                    
+                    for(let platformRole=0; platformRole < userInformation.platformRoles.length; platformRole++) {
+
+                        const currentRole = userInformation.platformRoles[platformRole];
+                        if (currentRole.programs && currentRole.programs.length > 0) {
+
+                            if (role) {
+                                let roleArray = role.split(',');
+                                
+                                if (!roleArray.includes(currentRole.code)) {
+                                    continue;
+                                }
+                            }
+
+                            for( let program = 0; program < currentRole.programs.length;program++) {
+                                programMapToRole[currentRole.programs[program].toString()] = currentRole.code;
+                                programIds.push(currentRole.programs[program]);
+                            }
+
                         }
-                    })
+                    }
 
                     const programData = await programsHelper.programDocuments({
                         _id: {$in: programIds},
