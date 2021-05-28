@@ -40,7 +40,12 @@ ApiInterceptor.prototype.validateToken = function (token, callback) {
     if (fs.existsSync(path)) {
       cert = fs.readFileSync(path);
       jwt.verify(token, cert, { algorithm: 'RS256' }, function (err, decode) {
-  
+        console.log(path)
+        console.log(token)
+        console.log(cert.toString())
+        console.log(err)
+        console.log(decode)
+        console.log(now.getTime() > expiry * 1000)
         if (err) {
           return callback("ERR_TOKEN_INVALID", null);
         }
