@@ -15,6 +15,8 @@ const entityTypesHelper = require(MODULES_BASE_PATH + "/entityTypes/helper");
 const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const elasticSearch = require(GENERIC_HELPERS_PATH + "/elastic-search");
+const programsHelper = require(MODULES_BASE_PATH + "/programs/helper");
+const solutionsHelper = require(MODULES_BASE_PATH + "/solutions/helper");
 
 module.exports = class UserExtensionHelper {
 
@@ -1020,6 +1022,164 @@ static updateUserRolesInEntitiesElasticSearch(userId = "", userRoles = []) {
     })
 
    }
+
+    /**
+   * List of programs for platform user
+   * @method
+   * @name programsByPlatformRoles
+   * @param {String} userId - Logged in user id.
+   * @param {String} role - Platform user role.
+   * @returns {Array} 
+   */
+
+    static programsByPlatformRoles(userId,role) {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                let projection = {
+                    "platformRoles": 1
+                };
+
+                let findQuery = {
+                    userId: userId,
+                    status: constants.common.ACTIVE
+                }
+
+                if (role) {
+                    let roleArray = role.split(',');
+                    findQuery["platformRoles.code"] =  {$in: roleArray};
+                }
+                
+                const userInformation = await this.userExtensionDocument(findQuery,projection);
+       
+                if (!userInformation) {
+                   return resolve({
+                       status: httpStatusCode.bad_request.status,
+                       message: constants.apiResponses.USER_PLATFORM_ROLE_NOT_FOUND
+                   })
+                }
+
+                let programsDocuments = [];
+                if (userInformation.platformRoles && userInformation.platformRoles.length > 0) {
+                    let programIds = [];
+                    let programMapToRole = {};
+                    
+                    for(let platformRole=0; platformRole < userInformation.platformRoles.length; platformRole++) {
+
+                        const currentRole = userInformation.platformRoles[platformRole];
+                        if (currentRole.programs && currentRole.programs.length > 0) {
+
+                            if (role) {
+                                let roleArray = role.split(',');
+                                
+                                if (!roleArray.includes(currentRole.code)) {
+                                    continue;
+                                }
+                            }
+
+                            for( let program = 0; program < currentRole.programs.length;program++) {
+                                programMapToRole[currentRole.programs[program].toString()] = currentRole.code;
+                                programIds.push(currentRole.programs[program]);
+                            }
+
+                        }
+                    }
+
+                    const programData = await programsHelper.programDocuments({
+                        _id: {$in: programIds},
+                        status: constants.common.ACTIVE 
+                     },["externalId","name","description"]);
+
+                     if (programData.length > 0) {
+                         programsDocuments = programData.map(program => {
+                             if (programMapToRole[program._id.toString()]) {
+                                 program["role"] = programMapToRole[program._id.toString()];
+                             }
+
+                             return program;
+                         });
+                     }
+                }
+
+                return resolve({
+                   message: constants.apiResponses.PLATFORM_USER_PROGRAMS,
+                   data: programsDocuments
+                });
+            } catch(error) {
+                return reject(error);
+            }
+        })
+    }
+
+     /**
+   * List of solutions by platform user program
+   * @method
+   * @name solutions
+   * @param {String} userId - Logged in user id.
+   * @param {String} programId - Program id.
+   * @param {String} role - role.
+   * @returns {Array} 
+   */
+
+    static solutions(userId,programId,role) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                
+                const userInformation = await this.userExtensionDocument
+                (
+                    { 
+                        "userId": userId,
+                        "status": constants.common.ACTIVE,
+                        "$and": [
+                            {"platformRoles": {$elemMatch: {"code": role,"programs": ObjectId(programId)}}}
+                        ]
+                   },
+                   {
+                       _id: 1
+                   }
+                );
+       
+               if (!userInformation) {
+                   return resolve({
+                       status: httpStatusCode.bad_request.status,
+                       message: constants.apiResponses.USER_PLATFORM_ROLE_NOT_FOUND
+                   })
+               }
+       
+                const programDocuments = await programsHelper.programDocuments({
+                   _id: programId,
+                   status: constants.common.ACTIVE 
+                },["components"]);
+
+                if (!programDocuments.length > 0) {
+                    return resolve({
+                        status: httpStatusCode.bad_request.status,
+                        message: constants.apiResponses.PROGRAM_NOT_FOUND
+                    })
+                }
+
+                const solutionDocuments = await solutionsHelper.solutionDocuments({
+                    _id: {$in: programDocuments[0].components},
+                    programId: programId,
+                    isReusable: false
+                },[
+                    "externalId",
+                    "description",
+                    "name",
+                    "type",
+                    "subType",
+                    "isRubricDriven"
+                ]);
+       
+                return resolve({
+                   message: constants.apiResponses.SOLUTIONS_LIST,
+                   data: solutionDocuments
+                });
+            } catch(error) {
+                return reject(error);
+            }
+        })
+    }
 };
 
 
