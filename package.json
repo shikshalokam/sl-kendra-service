@@ -52,6 +52,7 @@
     "jwt-decode": "^2.2.0",
     "kafka-node": "^5.0.0",
     "keycloak-auth-utils": "^3.3.0",
+    "log": "^1.4.0",
     "mocha": "^6.2.2",
     "moment-timezone": "^0.5.23",
     "mongodb": "^3.2.3",

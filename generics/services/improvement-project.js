@@ -1,38 +1,38 @@
 /**
- * name : samiksha.js
+ * name : improvement-project.js
  * author : Aman Jung Karki
- * Date : 11-Nov-2019
- * Description : All samiksha related api call.
+ * Date : 12-Mar-2021
+ * Description : All improvement project related api call.
  */
 
 //dependencies
-
 const request = require('request');
 
 /**
-  * List of assigned user observations.
+  * List of user assigned projects.
   * @function
-  * @name assignedObservations
+  * @name assignedProjects
   * @param {String} token - logged in user token.
-  * @param {String} [ search = "" ] - search data.
-  * @param {String} [ filter = "" ] 
+  * @param {Object} requestedData - Request body data.
+  * @param {String} search - search data.
+  * @param {String} filter - filter text.
   * @returns {Promise} returns a promise.
 */
 
-var assignedObservations = function ( token,search = "",filter = "" ) {
+var assignedProjects = function ( token,search = "",filter = "" ) {
 
-    let userAssignedUrl = 
-    process.env.ML_SURVEY_SERVICE_URL + 
-    constants.endpoints.GET_USER_ASSIGNED_OBSERVATION + "?search=" + search;
-
+    let url = 
+    process.env.ML_PROJECT_SERVICE_URL +
+    constants.endpoints.GET_USER_ASSIGNED_PROJECT + "?search=" + search;
+    
     if( filter !== "" ) {
-        userAssignedUrl = userAssignedUrl + "&filter=" + filter;
-    } 
+        url = url + "&filter=" + filter;
+    }
     
     return new Promise(async (resolve, reject) => {
         try {
 
-            function assessmentCallback(err, data) {
+            function improvementProjectCallback(err, data) {
 
                 let result = {
                     success : true
@@ -61,7 +61,7 @@ var assignedObservations = function ( token,search = "",filter = "" ) {
                 }
             };
 
-            request.get(userAssignedUrl,options,assessmentCallback)
+            request.get(url,options,improvementProjectCallback)
 
         } catch (error) {
             return reject(error);
@@ -71,29 +71,28 @@ var assignedObservations = function ( token,search = "",filter = "" ) {
 }
 
 /**
-  * List of user assigned surveys.
+  * List of user imported projects.
   * @function
-  * @name assignedSurveys
+  * @name importedProjects
   * @param {String} token - logged in user token.
-  * @param {String} [search = ""] - search data.
-  * @param {String} [filter = ""] - filter key.
+  * @param {String} programId - program id.
   * @returns {Promise} returns a promise.
 */
 
-var assignedSurveys = function ( token,search = "",filter = "" ) {
+var importedProjects = function ( token,programId = "" ) {
 
-    let userAssignedUrl = 
-    process.env.ML_SURVEY_SERVICE_URL +
-    constants.endpoints.GET_USER_ASSIGNED_SURVEY + "?search=" + search;
+    let url = 
+    process.env.ML_PROJECT_SERVICE_URL +
+    constants.endpoints.IMPORTED_PROJECT;
 
-    if( filter !== "" ) {
-        userAssignedUrl = userAssignedUrl + "&filter=" + filter;
-    } 
+    if( programId !== "" ) {
+        url += "/" + programId;
+    }
     
     return new Promise(async (resolve, reject) => {
         try {
 
-            function assessmentCallback(err, data) {
+            function improvementProjectCallback(err, data) {
 
                 let result = {
                     success : true
@@ -122,7 +121,7 @@ var assignedSurveys = function ( token,search = "",filter = "" ) {
                 }
             };
 
-            request.get(userAssignedUrl,options,assessmentCallback)
+            request.get(url,options,improvementProjectCallback)
 
         } catch (error) {
             return reject(error);
@@ -132,6 +131,6 @@ var assignedSurveys = function ( token,search = "",filter = "" ) {
 }
 
 module.exports = {
-    assignedObservations : assignedObservations,
-    assignedSurveys : assignedSurveys
-};
+    assignedProjects : assignedProjects,
+    importedProjects : importedProjects
+}

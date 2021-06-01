@@ -396,201 +396,6 @@ module.exports = class Users extends Abstract {
         })
     }
 
-     /**
-     * @api {get} /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
-     * Get organisation and root organisation
-     * @apiVersion 1.0.0
-     * @apiGroup Users
-     * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiSampleRequest /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
-     * @apiUse successBody
-     * @apiUse errorBody
-     * @apiParamExample {json} Response:
-     * {
-    "message": "User organisations fetched successfully",
-    "status": 200,
-    "result": {
-        "createdFor": [
-            "01305447637218918413"
-        ],
-        "rootOrganisations": [
-            "01305447637218918413"
-        ]
-    }
-    }
-    */
-
-    /**
-      * Organisations and root organisations.
-      * @method
-      * @name getUserOrganisationsAndRootOrganisations
-      * @param  {Request} req request body.
-      * @returns {JSON} Organisations and root organisations of user.
-     */
-
-    getUserOrganisationsAndRootOrganisations(req) {
-
-        return new Promise(async (resolve, reject) => {
-
-            try {
-
-                const userOrganisations = 
-                await usersHelper.getUserOrganisationsAndRootOrganisations(
-                    (req.params._id && req.params._id != "") ? 
-                    req.params._id : 
-                    req.userDetails.id,
-                    req.userDetails.userToken
-                );
-
-                resolve(userOrganisations);
-
-            } catch (error) {
-
-                return reject({
-                    status: 
-                    error.status || 
-                    httpStatusCode["internal_server_error"].status,
-
-                    message: 
-                    error.message || 
-                    httpStatusCode["internal_server_error"].message
-                })
-
-            }
-
-
-        })
-    }
-
-
-  /**
-  * @api {get} /kendra/api/v1/users/search
-  * User Search
-  * @apiVersion 1.0.0
-  * @apiGroup Users
-  * @apiHeader {String} internal-access-token Internal access token
-  * @apiHeader {String} X-authenticated-user-token Authenticity token
-  * @apiSampleRequest /kendra/api/v1/users/search?search=a1
-  * @apiParamExample {json} Response:
-  * {
-  *   "userName":"a1"
-  * }
-  * 
-  * @apiUse successBody
-  * @apiUse errorBody
-  * @apiParamExample {json} Response:
-  * {
-    "message": "User profile fetched successfully.",
-    "status": 200,
-    "result": {
-        "data": [
-            {
-                "lastName": "Shikhshlokam",
-                "maskedPhone": "******0005",
-                "rootOrgName": "SLDEV",
-                "roles": [
-                    "PUBLIC"
-                ],
-                "channel": "SLDEV",
-                "updatedDate": null,
-                "prevUsedPhone": "",
-                "stateValidated": false,
-                "isDeleted": false,
-                "organisations": [
-                    {
-                        "updatedBy": null,
-                        "organisationId": "01305447637218918413",
-                        "orgName": "SLDEV",
-                        "addedByName": null,
-                        "addedBy": null,
-                        "roles": [
-                            "PUBLIC"
-                        ],
-                        "approvedBy": null,
-                        "updatedDate": null,
-                        "userId": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-                        "approvaldate": null,
-                        "isDeleted": false,
-                        "parentOrgId": null,
-                        "hashTagId": "01305447637218918413",
-                        "isRejected": null,
-                        "position": null,
-                        "id": "0130661229826457602",
-                        "orgjoindate": "2020-07-17 11:18:57:674+0000",
-                        "isApproved": null,
-                        "orgLeftDate": null
-                    }
-                ],
-                "flagsValue": 3,
-                "maskedEmail": "a1@shikshalokam.dev",
-                "id": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-                "tempPassword": null,
-                "recoveryEmail": "",
-                "email": "a1@shikshalokam.dev",
-                "identifier": "01c04166-a65e-4e92-a87b-a9e4194e771d",
-                "thumbnail": null,
-                "updatedBy": null,
-                "profileSummary": null,
-                "phoneVerified": true,
-                "locationIds": [],
-                "registryId": null,
-                "recoveryPhone": "",
-                "userName": "a1",
-                "rootOrgId": "01305447637218918413",
-                "prevUsedEmail": "",
-                "firstName": "A1",
-                "lastLoginTime": null,
-                "emailVerified": true,
-                "tncAcceptedOn": "2020-11-20T05:49:25.776Z",
-                "framework": {},
-                "createdDate": "2020-07-17 11:18:57:553+0000",
-                "phone": "******0005",
-                "createdBy": "47ab2766-7595-4867-bbe3-7c23dc5e4552",
-                "currentLoginTime": null,
-                "userType": "OTHER",
-                "tncAcceptedVersion": "v1",
-                "status": 1
-            }
-        ]
-    }
-  }
-  **/
-
-  /**
-  * Get users search.
-  * @method
-  * @name searchUsers
-  * @param  {req}  - requested data.
-  * @returns {json} Response consists of user details
-  */
-
-   search(req) {
-    return new Promise(async (resolve, reject) => {
-      try {
-
-       
-        let usersList = await usersHelper.search(
-            req.query.search,
-            req.userDetails.userToken
-          );
-
-        return resolve(usersList);
-
-      } catch (error) {
-
-        return reject({
-            status: 
-            error.status || 
-            httpStatusCode["internal_server_error"].status,
-
-            message: 
-            error.message || 
-            httpStatusCode["internal_server_error"].message
-        })
-
-      }
-    });
-  }
 
    /**
   * @api {post} /kendra/api/v1/users/solutions/:programId?page=:page&limit=:limit&search=:searchText
@@ -660,7 +465,8 @@ module.exports = class Users extends Abstract {
             req.body,
             req.pageSize,
             req.pageNo,
-            req.searchText
+            req.searchText,
+            req.userDetails.userToken
         );
 
         targetedSolutions["result"] = targetedSolutions.data;
@@ -805,6 +611,131 @@ module.exports = class Users extends Abstract {
 
                 entitiesMappingData["result"] = entitiesMappingData.data;
                 resolve(entitiesMappingData);
+
+            } catch (error) {
+
+                return reject({
+                    status: 
+                    error.status || 
+                    httpStatusCode["internal_server_error"].status,
+
+                    message: 
+                    error.message || 
+                    httpStatusCode["internal_server_error"].message
+                })
+
+            }
+
+
+        })
+    }
+    
+     /**
+    * @api {post} /kendra/api/v1/users/targetedEntity/:solutionId Targeted entity.
+    * @apiVersion 1.0.0
+    * @apiName Targeted entity.
+    * @apiGroup Users
+    * @apiParamExample {json} Request-Body:
+    * {
+        "state" : "bc75cc99-9205-463e-a722-5326857838f8",
+        "district" : "b54a5c6d-98be-4313-af1c-33040b1703aa",
+        "school" : "2a128c91-a5a2-4e25-aa21-3d9196ad8203",
+        "role" : "DEO"
+    }
+    * @apiHeader {String} X-authenticated-user-token Authenticity token
+    * @apiSampleRequest /kendra/api/v1/users/targetedEntity/601d41607d4c835cf8b724ad
+    * @apiUse successBody
+    * @apiUse errorBody
+    * @apiParamExample {json} Response:
+    * {
+    "message": "Targeted entity fetched successfully",
+    "status": 200,
+    "result": {
+        "_id": "5fd098e2e049735a86b748ad",
+        "entityType": "district",
+        "entityName": "VIZIANAGARAM"
+    }}
+    */
+
+     /**
+   * Targeted entity
+   * @method
+   * @name targetedEntity
+   * @param {Object} req - requested data.
+   * @param {Object} req.body - requested bidy data.
+   * @returns {Array} Details entity.
+   */
+
+    async targetedEntity(req) {
+        return new Promise(async (resolve, reject) => {
+          try {
+    
+            let detailEntity = await usersHelper.targetedEntity(
+                req.params._id,
+                req.body
+            );
+    
+            detailEntity["result"] = detailEntity.data;
+    
+            return resolve(detailEntity);
+    
+          } catch (error) {
+            return reject({
+              status: error.status || httpStatusCode.internal_server_error.status,
+              message: error.message || httpStatusCode.internal_server_error.message,
+              errorObject: error
+            });
+          }
+        });
+    }
+
+        /**
+     * @api {get} /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
+     * Get organisation and root organisation
+     * @apiVersion 1.0.0
+     * @apiGroup Users
+     * @apiHeader {String} X-authenticated-user-token Authenticity token
+     * @apiSampleRequest /kendra/api/v1/users/getUserOrganisationsAndRootOrganisations
+     * @apiUse successBody
+     * @apiUse errorBody
+     * @apiParamExample {json} Response:
+     * {
+    "message": "User organisations fetched successfully",
+    "status": 200,
+    "result": {
+        "createdFor": [
+            "01305447637218918413"
+        ],
+        "rootOrganisations": [
+            "01305447637218918413"
+        ]
+    }
+    }
+    */
+
+    /**
+      * Organisations and root organisations.
+      * @method
+      * @name getUserOrganisationsAndRootOrganisations
+      * @param  {Request} req request body.
+      * @returns {JSON} Organisations and root organisations of user.
+     */
+
+    getUserOrganisationsAndRootOrganisations(req) {
+
+        return new Promise(async (resolve, reject) => {
+
+            try {
+
+                const userOrganisations = 
+                await usersHelper.getUserOrganisationsAndRootOrganisations(
+                    (req.params._id && req.params._id != "") ? 
+                    req.params._id : 
+                    req.userDetails.id,
+                    req.userDetails.userToken
+                );
+
+                resolve(userOrganisations);
 
             } catch (error) {
 
