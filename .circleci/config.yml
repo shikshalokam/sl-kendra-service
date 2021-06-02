@@ -22,8 +22,7 @@ jobs:
 orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.0
 workflows:
-  version: 2
-  build_and_test:
+  main:
     jobs:
       - build:
           context: SonarCloud
