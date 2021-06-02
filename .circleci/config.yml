@@ -1,4 +1,6 @@
 version: 2.17
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
 jobs:
   build:
     docker:
@@ -18,9 +20,11 @@ jobs:
           key: dependency-cache-{{checksum "package.json"}}
           paths:
             - ./node_modules
+      - sonarcloud/scan
 
 workflows:
   version: 2
   build:
     jobs:
-      - build
+      - build:
+        context: SonarCloud
