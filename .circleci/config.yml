@@ -1,4 +1,4 @@
-version: 2.17
+version: 2.1
 jobs:
   build:
     docker:
@@ -19,13 +19,11 @@ jobs:
           paths:
             - ./node_modules
       - sonarcloud/scan
-
 orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
-
+  sonarcloud: sonarsource/sonarcloud@1.0.2
 workflows:
   version: 2
-  main:
+  build_and_test:
     jobs:
       - build:
         context: SonarCloud
