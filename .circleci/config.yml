@@ -20,7 +20,7 @@ jobs:
             - ./node_modules
       - sonarcloud/scan
 orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
+  sonarcloud: sonarsource/sonarcloud@1.0.0
 workflows:
   version: 2
   build_and_test:
