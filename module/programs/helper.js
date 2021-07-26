@@ -399,7 +399,11 @@ module.exports = class ProgramsHelper {
             },{ 
             "description": new RegExp(searchText, 'i') 
           });
-        } 
+        }
+        
+        let sortQuery = {
+          $sort: {"createdAt": -1}
+        }
 
         let projection1 = {};
 
@@ -438,7 +442,7 @@ module.exports = class ProgramsHelper {
           }
         };
        
-        programDocument.push({ $match : matchQuery }, { $project : projection1 }, facetQuery, projection2);
+        programDocument.push({ $match : matchQuery }, sortQuery,{ $project : projection1 }, facetQuery, projection2);
        
         let programDocuments = 
         await database.models.programs.aggregate(programDocument);
