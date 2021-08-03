@@ -651,7 +651,8 @@ module.exports = class SolutionsHelper {
             "projectTemplateId",
             "type",
             "language",
-            "creator"
+            "creator",
+            "endDate"
           ]  
         );
       
@@ -1283,7 +1284,6 @@ module.exports = class SolutionsHelper {
           surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
 
           if ( !surveyReportPage ) {
-              
             targetedSolutions = 
             await this.forUserRoleAndLocation(
               requestedData,
@@ -1310,11 +1310,17 @@ module.exports = class SolutionsHelper {
                         
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
+                  
+                          if( !surveyReportPage ) {
+                            targetedSolution.expiryDate = targetedSolution.endDate;
+                          }
+                          
                         }
 
                         mergedData.push(targetedSolution);
                         delete targetedSolution.type; 
                         delete targetedSolution.externalId;
+                        delete targetedSolution.endDate;
                     });
                 }
             }
