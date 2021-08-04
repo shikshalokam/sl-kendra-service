@@ -651,8 +651,7 @@ module.exports = class SolutionsHelper {
             "projectTemplateId",
             "type",
             "language",
-            "creator",
-            "creatorName"
+            "creator"
           ]  
         );
       
@@ -1314,12 +1313,7 @@ module.exports = class SolutionsHelper {
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
                         } 
-                        if ( solutionType === constants.common.OBSERVATION ) {
-                          targetedSolution["creatorName"] = targetedSolution.creatorName ? targetedSolution.creatorName : "";
-                        } else {
-                          delete targetedSolution.creatorName;
-                        }
-
+                       
                         mergedData.push(targetedSolution);
                         delete targetedSolution.type; 
                         delete targetedSolution.externalId;
