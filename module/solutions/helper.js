@@ -1217,6 +1217,8 @@ module.exports = class SolutionsHelper {
             surveyReportPage
           );
 
+
+
           let totalCount = 0;
           let mergedData = [];
           let solutionIds = [];
@@ -1372,7 +1374,7 @@ module.exports = class SolutionsHelper {
             search,
             filter
           );
-
+      
         } else if ( solutionType === constants.common.SURVEY) {
             
           userAssignedSolutions = 
