@@ -1312,11 +1312,6 @@ module.exports = class SolutionsHelper {
                         
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
-                          
-                          if(surveyReportPage ) {
-                            delete targetedSolution.endDate;
-                          }
-                          
                         }
 
                         mergedData.push(targetedSolution);
