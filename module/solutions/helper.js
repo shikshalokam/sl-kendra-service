@@ -1310,9 +1310,9 @@ module.exports = class SolutionsHelper {
                         
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
-                  
-                          if( !surveyReportPage ) {
-                            targetedSolution.expiryDate = targetedSolution.endDate;
+                          
+                          if(surveyReportPage ) {
+                            delete targetedSolution.endDate;
                           }
                           
                         }
@@ -1320,7 +1320,7 @@ module.exports = class SolutionsHelper {
                         mergedData.push(targetedSolution);
                         delete targetedSolution.type; 
                         delete targetedSolution.externalId;
-                        delete targetedSolution.endDate;
+                        
                     });
                 }
             }
