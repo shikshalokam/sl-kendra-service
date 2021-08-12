@@ -651,7 +651,8 @@ module.exports = class SolutionsHelper {
             "projectTemplateId",
             "type",
             "language",
-            "creator"
+            "creator",
+            "endDate"
           ]  
         );
       
@@ -1307,14 +1308,24 @@ module.exports = class SolutionsHelper {
                         targetedSolution.solutionId = targetedSolution._id;
                         targetedSolution._id = "";
                         targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
-                        
+                        let isValid = true;
+
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
+
+                          let validDate = new Date(targetedSolution.endDate);
+                          validDate.setDate(validDate.getDate() + 15 );
+
+                          if(new Date() > new Date(validDate)){
+                              isValid = false;
+                          }
                         }
 
-                        mergedData.push(targetedSolution);
-                        delete targetedSolution.type; 
-                        delete targetedSolution.externalId;
+                        if(isValid){
+                          mergedData.push(targetedSolution);
+                          delete targetedSolution.type; 
+                          delete targetedSolution.externalId;
+                        }
                     });
                 }
             }
