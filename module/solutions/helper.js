@@ -466,14 +466,9 @@ module.exports = class SolutionsHelper {
             "isDeleted" : false
           };
 
-          if(type !== "" && type == constants.common.SURVEY){
-              matchQuery["status"] = {
-                $in: [
-                    constants.common.ACTIVE,
-                    constants.common.IN_ACTIVE
-                ]
-            }
-          }else{
+          if( type == constants.common.SURVEY ) {
+            matchQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.IN_ACTIVE ] }
+          } else {
             matchQuery.status = constants.common.ACTIVE ;
           }
 
@@ -733,19 +728,14 @@ module.exports = class SolutionsHelper {
           "isDeleted" : false
         };
 
-        if(type === constants.common.SURVEY){
-          filterQuery["status"] = {
-              $in: [
-                  constants.common.ACTIVE,
-                  constants.common.IN_ACTIVE
-              ]
-          }
+        if( type === constants.common.SURVEY ) {
 
+          filterQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.IN_ACTIVE ] }
           let validDate = new Date();
-          validDate.setDate(validDate.getDate() - 15 );
+          validDate.setDate(validDate.getDate() - constants.common.DEFAULT_SURVEY_REMOVED_DAY );
           filterQuery["endDate"] = { $gte : validDate } 
 
-        }else{
+        } else {
           filterQuery.status = constants.common.ACTIVE; 
         }
 
