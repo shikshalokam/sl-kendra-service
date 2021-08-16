@@ -463,9 +463,14 @@ module.exports = class SolutionsHelper {
         try {
 
           let matchQuery = { 
-            "isDeleted" : false,
-            status : constants.common.ACTIVE 
+            "isDeleted" : false
           };
+
+          if( type == constants.common.SURVEY ) {
+            matchQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.IN_ACTIVE ] }
+          } else {
+            matchQuery.status = constants.common.ACTIVE ;
+          }
 
           if( type !== "" ) {
             matchQuery["type"] = type;
@@ -655,7 +660,7 @@ module.exports = class SolutionsHelper {
             "endDate"
           ]  
         );
-      
+
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
@@ -683,10 +688,10 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Auto targeted solutions query.
    */
   
-  static queryBasedOnRoleAndLocation( data ) {
+  static queryBasedOnRoleAndLocation( data, type = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
-
+ 
         let registryIds = [];
         let entityTypes = [];
 
@@ -719,11 +724,21 @@ module.exports = class SolutionsHelper {
           "scope.roles.code" : { $in : [constants.common.ALL_ROLES,data.role] },
           "scope.entities" : { $in : entityIds },
           "scope.entityType" : { $in : entityTypes },
-          isReusable : false,
-          "isDeleted" : false,
-          status : constants.common.ACTIVE
+          "isReusable" : false,
+          "isDeleted" : false
         };
-    
+
+        if( type === constants.common.SURVEY ) {
+
+          filterQuery["status"] = { $in: [ constants.common.ACTIVE, constants.common.IN_ACTIVE ] }
+          let validDate = new Date();
+          validDate.setDate(validDate.getDate() - constants.common.DEFAULT_SURVEY_REMOVED_DAY );
+          filterQuery["endDate"] = { $gte : validDate } 
+
+        } else {
+          filterQuery.status = constants.common.ACTIVE; 
+        }
+
         if( data.filter && Object.keys(data.filter).length > 0 ) {
           
           let solutionsSkipped = [];
@@ -1297,7 +1312,6 @@ module.exports = class SolutionsHelper {
           }
 
         if( targetedSolutions.success ) {
-
             if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
                 totalCount += targetedSolutions.data.count;
 
@@ -1308,24 +1322,13 @@ module.exports = class SolutionsHelper {
                         targetedSolution._id = "";
                         targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                         
-                        let isValid = true;
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
-
-                          let validDate = new Date(targetedSolution.endDate);
-                          validDate.setDate(validDate.getDate() + 15 );
-
-                          if(new Date() > new Date(validDate)){
-                              isValid = false;
-                          }
-
                         }
 
-                        if(isValid){
-                          mergedData.push(targetedSolution);
-                          delete targetedSolution.type; 
-                          delete targetedSolution.externalId;
-                        } 
+                        mergedData.push(targetedSolution);
+                        delete targetedSolution.type; 
+                        delete targetedSolution.externalId;
                         
                     });
                 }
