@@ -466,7 +466,14 @@ module.exports = class SolutionsHelper {
             "isDeleted" : false
           };
 
-          if(type !== constants.common.SURVEY){
+          if(type !== "" && type == constants.common.SURVEY){
+              matchQuery["status"] = {
+                $in: [
+                    "active",
+                    "inactive"
+                ]
+            }
+          }else{
             matchQuery.status = constants.common.ACTIVE ;
           }
 
@@ -672,7 +679,7 @@ module.exports = class SolutionsHelper {
           message : error.message,
           data : {}
         });
-        
+
       }
 
     })
@@ -726,7 +733,19 @@ module.exports = class SolutionsHelper {
           "isDeleted" : false
         };
 
-        if(type !==  constants.common.SURVEY){
+        if(type === constants.common.SURVEY){
+          filterQuery["status"] = {
+              $in: [
+                  "active",
+                  "inactive"
+              ]
+          }
+
+          let validDate = new Date();
+          validDate.setDate(validDate.getDate() - 15 );
+          filterQuery["endDate"] = { $gte : validDate } 
+
+        }else{
           filterQuery.status = constants.common.ACTIVE; 
         }
 
@@ -1313,24 +1332,13 @@ module.exports = class SolutionsHelper {
                         targetedSolution._id = "";
                         targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                         
-                        let isValid = true;
                         if ( solutionType === constants.common.SURVEY ) {
                           targetedSolution.isCreator = false;
-
-                          let validDate = new Date(targetedSolution.endDate);
-                          validDate.setDate(validDate.getDate() + 15 );
-
-                          if(new Date() > new Date(validDate)){
-                              isValid = false;
-                          }
-
                         }
 
-                        if(isValid){
-                          mergedData.push(targetedSolution);
-                          delete targetedSolution.type; 
-                          delete targetedSolution.externalId;
-                        } 
+                        mergedData.push(targetedSolution);
+                        delete targetedSolution.type; 
+                        delete targetedSolution.externalId;
                         
                     });
                 }
