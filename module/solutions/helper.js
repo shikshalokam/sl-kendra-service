@@ -469,8 +469,8 @@ module.exports = class SolutionsHelper {
           if(type !== "" && type == constants.common.SURVEY){
               matchQuery["status"] = {
                 $in: [
-                    "active",
-                    "inactive"
+                    constants.common.ACTIVE,
+                    constants.common.IN_ACTIVE
                 ]
             }
           }else{
@@ -736,8 +736,8 @@ module.exports = class SolutionsHelper {
         if(type === constants.common.SURVEY){
           filterQuery["status"] = {
               $in: [
-                  "active",
-                  "inactive"
+                  constants.common.ACTIVE,
+                  constants.common.IN_ACTIVE
               ]
           }
 
