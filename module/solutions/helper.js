@@ -463,9 +463,12 @@ module.exports = class SolutionsHelper {
         try {
 
           let matchQuery = { 
-            "isDeleted" : false,
-            status : constants.common.ACTIVE 
+            "isDeleted" : false
           };
+
+          if(type !== constants.common.SURVEY){
+            matchQuery.status = constants.common.ACTIVE ;
+          }
 
           if( type !== "" ) {
             matchQuery["type"] = type;
@@ -655,7 +658,7 @@ module.exports = class SolutionsHelper {
             "endDate"
           ]  
         );
-      
+
         return resolve({
           success: true,
           message: constants.apiResponses.TARGETED_SOLUTIONS_FETCHED,
@@ -669,7 +672,7 @@ module.exports = class SolutionsHelper {
           message : error.message,
           data : {}
         });
-
+        
       }
 
     })
@@ -683,10 +686,10 @@ module.exports = class SolutionsHelper {
    * @returns {JSON} - Auto targeted solutions query.
    */
   
-  static queryBasedOnRoleAndLocation( data ) {
+  static queryBasedOnRoleAndLocation( data, type = "" ) {
     return new Promise(async (resolve, reject) => {
       try {
-
+ 
         let registryIds = [];
         let entityTypes = [];
 
@@ -719,11 +722,14 @@ module.exports = class SolutionsHelper {
           "scope.roles.code" : { $in : [constants.common.ALL_ROLES,data.role] },
           "scope.entities" : { $in : entityIds },
           "scope.entityType" : { $in : entityTypes },
-          isReusable : false,
-          "isDeleted" : false,
-          status : constants.common.ACTIVE
+          "isReusable" : false,
+          "isDeleted" : false
         };
-    
+
+        if(type !==  constants.common.SURVEY){
+          filterQuery.status = constants.common.ACTIVE; 
+        }
+
         if( data.filter && Object.keys(data.filter).length > 0 ) {
           
           let solutionsSkipped = [];
@@ -1297,7 +1303,6 @@ module.exports = class SolutionsHelper {
           }
 
         if( targetedSolutions.success ) {
-
             if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
                 totalCount += targetedSolutions.data.count;
 
