@@ -1315,23 +1315,20 @@ module.exports = class SolutionsHelper {
             if( targetedSolutions.data.data && targetedSolutions.data.data.length > 0 ) {
                 totalCount += targetedSolutions.data.count;
 
-                if( mergedData.length !== pageSize ) {
+                targetedSolutions.data.data.forEach(targetedSolution => {
+                    targetedSolution.solutionId = targetedSolution._id;
+                    targetedSolution._id = "";
+                    targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
+                    
+                    if ( solutionType === constants.common.SURVEY ) {
+                      targetedSolution.isCreator = false;
+                    }
 
-                    targetedSolutions.data.data.forEach(targetedSolution => {
-                        targetedSolution.solutionId = targetedSolution._id;
-                        targetedSolution._id = "";
-                        targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
-                        
-                        if ( solutionType === constants.common.SURVEY ) {
-                          targetedSolution.isCreator = false;
-                        }
-
-                        mergedData.push(targetedSolution);
-                        delete targetedSolution.type; 
-                        delete targetedSolution.externalId;
-                        
-                    });
-                }
+                    mergedData.push(targetedSolution);
+                    delete targetedSolution.type; 
+                    delete targetedSolution.externalId;
+                    
+                });
             }
 
         }
