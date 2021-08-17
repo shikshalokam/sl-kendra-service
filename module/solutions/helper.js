@@ -1333,7 +1333,7 @@ module.exports = class SolutionsHelper {
 
         }
 
-        if( mergedData.length > 0) {
+        if( mergedData.length > 0 ) {
             let startIndex = pageSize * (pageNo - 1);
             let endIndex = startIndex + pageSize;
             mergedData = mergedData.slice(startIndex,endIndex) 
