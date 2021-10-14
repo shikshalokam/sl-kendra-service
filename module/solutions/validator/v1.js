@@ -10,10 +10,7 @@ module.exports = (req) => {
     let solutionsValidator = {
 
         create : function () {
-            req.checkBody('createdFor').exists().withMessage("required organisation created for id");
-            req.checkBody('rootOrganisations').exists().withMessage("required root organisations id");
             req.checkBody('programExternalId').exists().withMessage("required program externalId");
-            req.checkBody('entityType').exists().withMessage("required entity type");
             req.checkBody('externalId').exists().withMessage("required solution externalId");
             req.checkBody('name').exists().withMessage("required solution name");
             req.checkBody('type').exists().withMessage("required solution type");
