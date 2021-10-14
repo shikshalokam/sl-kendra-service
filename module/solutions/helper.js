@@ -1334,7 +1334,7 @@ module.exports = class SolutionsHelper {
 
           surveyReportPage = gen.utils.convertStringToBoolean(surveyReportPage);
 
-          if ( !surveyReportPage || solutionType == constants.common.COURSE ) {
+          if ( !surveyReportPage ) {
             targetedSolutions = 
             await this.forUserRoleAndLocation(
               requestedData,
@@ -1355,9 +1355,7 @@ module.exports = class SolutionsHelper {
                     targetedSolution.solutionId = targetedSolution._id;
                     targetedSolution._id = "";
 
-                    if( solutionType !== constants.common.COURSE ) {
-                      targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
-                    }
+                    targetedSolution["creator"] = targetedSolution.creator ? targetedSolution.creator : "";
                     
                     if ( solutionType === constants.common.SURVEY ) {
                       targetedSolution.isCreator = false;
