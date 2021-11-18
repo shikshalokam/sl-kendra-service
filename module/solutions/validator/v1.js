@@ -38,13 +38,16 @@ module.exports = (req) => {
             req.checkParams("_id").exists().withMessage("required program id");
             req.checkBody("entities").exists().withMessage("required entities to be added");
         },
-        details : function () {
+        getDetails : function () {
             req.checkParams("_id").exists().withMessage("required solution id");
         },
         getSolutions : function () {
             req.checkQuery("type").exists().withMessage("required solution type")
         },
         targetedEntity : function () {
+            req.checkParams("_id").exists().withMessage("required solution id");
+        },
+        fetchLink : function () {
             req.checkParams("_id").exists().withMessage("required solution id");
         }
     }
