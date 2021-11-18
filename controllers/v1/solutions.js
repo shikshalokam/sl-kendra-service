@@ -542,12 +542,12 @@ module.exports = class Solutions extends Abstract {
   }
 
       /**
-    * @api {get} /kendra/api/v1/solutions/details/:solutionId Solution details
+    * @api {get} /kendra/api/v1/solutions/getDetails/:solutionId Solution details
     * @apiVersion 1.0.0
     * @apiName Details of the solution.
     * @apiGroup Solutions
     * @apiHeader {String} X-authenticated-user-token Authenticity token
-    * @apiSampleRequest /kendra/api/v1/solutions/details/5ffbf8909259097d48017bbf
+    * @apiSampleRequest /kendra/api/v1/solutions/getDetails/5ffbf8909259097d48017bbf
     * @apiUse successBody
     * @apiUse errorBody
     * @apiParamExample {json} Response:
@@ -647,17 +647,17 @@ module.exports = class Solutions extends Abstract {
      /**
    * Details of the solution.
    * @method
-   * @name details
+   * @name getDetails
    * @param {Object} req - requested data.
    * @param {String} req.params._id - solution id.
    * @returns {Object} Solution details 
    */
 
-  async details(req) {
+  async getDetails(req) {
     return new Promise(async (resolve, reject) => {
       try {
 
-        let solutionData = await solutionsHelper.details(
+        let solutionData = await solutionsHelper.getDetails(
           req.params._id
         );
 
@@ -869,5 +869,55 @@ module.exports = class Solutions extends Abstract {
         }
       })
     }
+
+   /**
+  * @api {get} /kendra/api/v1/solutions/fetchLink/:solutionId
+  * @apiVersion 1.0.0
+  * @apiName Get link by solution id
+  * @apiGroup Solutions
+  * @apiSampleRequest /kendra/api/v1/solutions/fetchLink/5fa28620b6bd9b757dc4e932
+  * @apiHeader {String} X-authenticated-user-token Authenticity token  
+  * @apiUse successBody
+  * @apiUse errorBody
+  * @apiParamExample {json} Response:
+  * {
+    "message": "Solution Link generated successfully",
+    "status": 200,
+    "result": "https://dev.sunbirded.org/manage-learn/create-observation/38cd93bdb87489c3890fe0ab00e7d406"
+    }
+  */
+
+   /**
+   * Get link by solution id.
+   * @method
+   * @name fetchLink
+   * @param {Object} req - requested data.
+   * @param {String} req.params._id - solution Id
+   * @returns {Array}
+   */
+
+  async fetchLink(req) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await solutionsHelper.fetchLink(
+          req.params._id,
+          req.userDetails.userId
+        );
+
+        return resolve(solutionData);
+
+      }
+      catch (error) {
+        reject({
+          status: error.status || httpStatusCode.internal_server_error.status,
+          message: error.message || httpStatusCode.internal_server_error.message,
+          errorObject: error
+        })
+      }
+    })
+  }
+
+
 
 }

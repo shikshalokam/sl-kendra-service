@@ -13,6 +13,7 @@ const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper");
 const userRolesHelper = require(MODULES_BASE_PATH + "/user-roles/helper");
 const assessmentService = require(ROOT_PATH + '/generics/services/samiksha');
 const improvementProjectService = require(ROOT_PATH + '/generics/services/improvement-project');
+const appsPortalBaseUrl = process.env.APP_PORTAL_BASE_URL ? process.env.APP_PORTAL_BASE_URL  + "/" : "https://survey.preprod.ntp.net.in/"
 
 /**
     * SolutionsHelper
@@ -1217,7 +1218,7 @@ module.exports = class SolutionsHelper {
    * @returns {Object} - Details of the solution.
    */
 
-  static details( solutionId ) {
+  static getDetails( solutionId ) {
     return new Promise(async (resolve, reject) => {
       try {
 
@@ -1519,6 +1520,82 @@ module.exports = class SolutionsHelper {
     })
    }
 
+  /**
+   * Get link by solution id
+   * @method
+   * @name fetchLink
+   * @param {String} solutionId - solution Id.
+   * @param {String} appName - app Name.
+   * @param {String} userId - user Id.
+   * @returns {Object} - Details of the solution.
+   */
+
+  static fetchLink(solutionId, userId) {
+    return new Promise(async (resolve, reject) => {
+      try {
+
+        let solutionData = await this.solutionDocuments(
+          {
+            _id: solutionId,
+            isReusable: false,
+            isAPrivateProgram: false
+          },
+          ["link", "type", 'author']
+        );
+
+        if ( !Array.isArray(solutionData) || solutionData.length < 1 ) {
+          return resolve({
+            message: constants.apiResponses.SOLUTION_NOT_FOUND,
+            result: {}
+          });
+        }
+
+        let prefix = constants.common.PREFIX_FOR_SOLUTION_LINK;
+
+        let solutionLink, link;
+
+        if ( !solutionData[0].link ) {
+
+          let updateLink = await gen.utils.md5Hash(
+            solutionData[0]._id + "###" + solutionData[0].author
+          );
+
+          let updateSolution = await this.update(
+            solutionId,
+            { link: updateLink },
+            userId
+          );
+
+          solutionLink = updateLink;
+        } else {
+          solutionLink = solutionData[0].link;
+        }
+
+        link = _generateLink(
+          appsPortalBaseUrl,
+          prefix,
+          solutionLink,
+          solutionData[0].type
+        );
+
+        return resolve({
+          success: true,
+          message: constants.apiResponses.LINK_GENERATED,
+          result: link
+        });
+
+      } catch (error) {
+        return resolve({
+          success: false,
+          status: error.status
+            ? error.status
+            : httpStatusCode['internal_server_error'].status,
+          message: error.message
+        });
+      }
+    });
+  }
+
 };
 
  /**
@@ -1535,4 +1612,30 @@ function _targetedSolutionTypes() {
     constants.common.IMPROVEMENT_PROJECT,
     constants.common.COURSE
   ]
+}
+
+/**
+   * Generate sharing Link.
+   * @method
+   * @name _targetedSolutionTypes
+   * @returns {Array} - Targeted solution types
+   */
+
+function _generateLink(appsPortalBaseUrl, prefix, solutionLink, solutionType) {
+
+  let link;
+
+  switch (solutionType) {
+    case constants.common.OBSERVATION:
+      link = appsPortalBaseUrl + prefix + constants.common.CREATE_OBSERVATION + solutionLink;
+      break;
+    case constants.common.IMPROVEMENT_PROJECT:
+      link = appsPortalBaseUrl + prefix + constants.common.CREATE_PROJECT + solutionLink;
+      break;
+    default:
+      link = appsPortalBaseUrl + prefix + constants.common.CREATE_SURVEY + solutionLink;
+  }
+
+  return link;
+
 }
