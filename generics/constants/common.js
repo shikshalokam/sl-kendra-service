@@ -63,5 +63,6 @@ module.exports = {
   "CREATE_OBSERVATION": "/create-observation/",
   "CREATE_SURVEY" : "/create-survey/",
   "CREATE_PROJECT" : "/create-project/",
-  "LINK" : "link"
+  "LINK" : "link",
+  "DEFAULT_SUBMISSION_REQUIRED" : 1
 };
