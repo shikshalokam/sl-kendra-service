@@ -7,7 +7,20 @@ module.exports = (req) => {
             req.checkParams('_id').exists().withMessage("required Entity id");
         },
         details : function () {
-            req.checkParams('_id').exists().withMessage("required Entity id");
+            req.checkParams('_id').optional()
+            .isMongoId().withMessage("Invalid entity id");
+
+            req.checkBody('entityIds').optional()
+            .isArray().withMessage("entityIds should be array")
+            .custom(entities => 
+                entitiesValidation(entities)
+            ).withMessage("invalid entity ids");
+
+            req.checkBody('locationIds').optional()
+            .isArray().withMessage("locationIds should be array")
+            .custom(location => 
+                gen.utils.checkValidUUID(location)
+            ).withMessage("invalid location ids");
         },
         subEntitiesRoles : function() {
             req.checkParams('_id').exists().withMessage("required Entity id");

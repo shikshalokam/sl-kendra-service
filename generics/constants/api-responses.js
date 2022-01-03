@@ -170,4 +170,5 @@ module.exports = {
   "ENTITY_TYPE_REQUIRED": "required entity type",
   "COURSE_LINK_REQUIRED": "Course link is required",
   "LINK_GENERATED": "Link generated successfully",
+  "ENTITY_ID_OR_LOCATION_ID_NOT_FOUND" : "Entity id or location id not found" 
 };
