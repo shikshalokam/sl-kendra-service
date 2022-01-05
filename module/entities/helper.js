@@ -536,7 +536,7 @@ module.exports = class EntitiesHelper {
                     entityIds.push(...requestData.entityIds);
                 }
                 
-                if(entityIds.length == 0 && !requestData.locationIds){
+                if(entityIds.length == 0 && !requestData.locationIds && !requestData.codes){
                     throw {
                         message : constants.apiResponses.ENTITY_ID_OR_LOCATION_ID_NOT_FOUND,
                     }
@@ -555,6 +555,14 @@ module.exports = class EntitiesHelper {
                     query["$or"].push({
                         "registryDetails.locationId": {
                             $in: requestData.locationIds
+                        }
+                    })
+                }
+
+                if (requestData && requestData.codes) {
+                    query["$or"].push({
+                        "registryDetails.code": {
+                            $in: requestData.codes
                         }
                     })
                 }
