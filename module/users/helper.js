@@ -534,18 +534,29 @@ module.exports = class UsersHelper {
                 let totalCount = 0;
                 let mergedData = [];
 
-                if( autoTargetedSolutions.data.data && autoTargetedSolutions.data.data.length > 0 ) {
-                    
-                    totalCount = autoTargetedSolutions.data.count;
+                let projectSolutionIdIndexMap = {}
 
+                if( autoTargetedSolutions.data.data && autoTargetedSolutions.data.data.length > 0 ) {
+
+                    // Remove observation solutions which for project tasks.
+          
+                    _.remove(autoTargetedSolutions.data.data,function(solution) {
+                     return solution.referenceFrom == constants.common.PROJECT && solution.type == constants.common.OBSERVATION;
+                    });
+                    
+                    totalCount = autoTargetedSolutions.data.length;
                     mergedData = autoTargetedSolutions.data.data;
 
                     mergedData = 
-                    mergedData.map( targetedData => {
+                    mergedData.map((targetedData, index) => {
+                        if(targetedData.type == constants.common.IMPROVEMENT_PROJECT) {
+                          projectSolutionIdIndexMap[targetedData._id.toString()] = index;
+                        }
+
                         delete targetedData.programId;
                         delete targetedData.programName;
                         return targetedData;
-                    });
+                  });
                 }
                     
                 let importedProjects = 
@@ -560,12 +571,19 @@ module.exports = class UsersHelper {
                         
                         totalCount += importedProjects.data.length;
 
-
                         importedProjects.data.forEach(importedProject => {
-                            let data = importedProject.solutionInformation;
-                            data["projectTemplateId"] = importedProject.projectTemplateId;
-                            data["type"] = constants.common.IMPROVEMENT_PROJECT;
-                            mergedData.push(data);
+
+                            if ( projectSolutionIdIndexMap[importedProject.solutionInformation._id] ) {
+                                mergedData[projectSolutionIdIndexMap[importedProject.solutionInformation._id]].projectId = importedProject._id;
+                            } else {
+
+                                let data = importedProject.solutionInformation;
+                                data['projectTemplateId'] = importedProject.projectTemplateId;
+                                data['projectId'] = importedProject._id;
+                                data["type"] = constants.common.IMPROVEMENT_PROJECT;
+                                mergedData.push(data);
+                                totalCount = totalCount + 1;
+                            }
                         });
 
                     }
